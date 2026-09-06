@@ -222,6 +222,18 @@ export const magicLinkSchema = z.object({
 export type MagicLinkFormValues = z.infer<typeof magicLinkSchema>
 export type MagicLinkFormInput = z.input<typeof magicLinkSchema>
 
+export const passwordLoginSchema = z.object({
+  email: z.string().email('Enter a valid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+})
+export type PasswordLoginFormValues = z.infer<typeof passwordLoginSchema>
+
+export const loginSchema = z.object({
+  email: z.string().email('Enter a valid email address'),
+  password: z.string().optional(),
+})
+export type LoginFormValues = z.infer<typeof loginSchema>
+
 export const tripSchema = z.object({
   name: z.string().min(1, 'Trip name is required'),
   startDate: optionalText,

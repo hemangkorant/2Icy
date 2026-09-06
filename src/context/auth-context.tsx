@@ -10,6 +10,8 @@ interface AuthContextValue {
   profile: Tables<'profiles'> | null
   loading: boolean
   signInWithMagicLink: (email: string) => Promise<{ error: string | null }>
+  signInWithPassword: (email: string, password: string) => Promise<{ error: string | null }>
+  signUpWithPassword: (email: string, password: string) => Promise<{ error: string | null; needsConfirmation: boolean }>
   signOut: () => Promise<void>
 }
 
@@ -65,6 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           options: { emailRedirectTo: import.meta.env.VITE_APP_URL },
         })
         return { error: error?.message ?? null }
+      },
+      async signInWithPassword(email: string, password: string) {
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        return { error: error?.message ?? null }
+      },
+      async signUpWithPassword(email: string, password: string) {
+        const { data, error } = await supabase.auth.signUp({ email, password })
+        return { error: error?.message ?? null, needsConfirmation: Boolean(data.user && !data.session) }
       },
       async signOut() {
         await supabase.auth.signOut()

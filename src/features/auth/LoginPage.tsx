@@ -8,26 +8,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/context/auth-context'
-import { type MagicLinkFormValues, magicLinkSchema } from '@/types/schemas'
+import { type LoginFormValues, loginSchema } from '@/types/schemas'
 
 export function LoginPage() {
-  const { signInWithMagicLink } = useAuth()
+  const { signInWithMagicLink, signInWithPassword, signUpWithPassword } = useAuth()
   const [sentTo, setSentTo] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [mode, setMode] = useState<'password' | 'magic'>('password')
+  const [registerMode, setRegisterMode] = useState(false)
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<MagicLinkFormValues>({ resolver: zodResolver(magicLinkSchema) })
+  } = useForm<LoginFormValues>({ resolver: zodResolver(loginSchema) })
 
-  const onSubmit = async (values: MagicLinkFormValues) => {
+  const onSubmit = async (values: LoginFormValues) => {
     setError(null)
-    const { error: signInError } = await signInWithMagicLink(values.email)
+    const result = mode === 'magic'
+      ? await signInWithMagicLink(values.email)
+      : registerMode
+        ? await signUpWithPassword(values.email, values.password ?? '')
+        : await signInWithPassword(values.email, values.password ?? '')
+    const signInError = result.error
     if (signInError) {
       setError(signInError)
       return
     }
-    setSentTo(values.email)
+    if (mode === 'magic') setSentTo(values.email)
+    if (registerMode && 'needsConfirmation' in result && result.needsConfirmation) setSentTo(values.email)
   }
 
   return (
@@ -38,12 +46,12 @@ export function LoginPage() {
             <Mountain className="size-6" />
           </div>
           <CardTitle>Iceland Trip Tracker</CardTitle>
-          <CardDescription>Sign in with a magic link — no password needed.</CardDescription>
+          <CardDescription>{mode === 'password' ? 'Sign in with your email and password.' : 'Sign in with a one-time email link.'}</CardDescription>
         </CardHeader>
         <CardContent>
           {sentTo ? (
             <p className="text-sm text-muted-foreground">
-              Check <span className="font-medium text-foreground">{sentTo}</span> for a sign-in link. You can close this tab.
+              Check <span className="font-medium text-foreground">{sentTo}</span> for a confirmation email. You can close this tab.
             </p>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
@@ -52,10 +60,24 @@ export function LoginPage() {
                 <Input id="email" type="email" placeholder="you@example.com" autoComplete="email" {...register('email')} />
                 {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
               </div>
+              {mode === 'password' && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="password">Password</Label>
+                  <Input id="password" type="password" minLength={8} autoComplete={registerMode ? 'new-password' : 'current-password'} {...register('password')} />
+                </div>
+              )}
               {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? 'Sending link…' : 'Send magic link'}
+                {isSubmitting ? 'Please wait…' : mode === 'magic' ? 'Send magic link' : registerMode ? 'Create account' : 'Sign in'}
               </Button>
+              <div className="flex justify-between gap-2 text-xs">
+                <button type="button" className="text-primary hover:underline" onClick={() => { setMode(mode === 'password' ? 'magic' : 'password'); setError(null) }}>
+                  {mode === 'password' ? 'Use magic link instead' : 'Use password instead'}
+                </button>
+                {mode === 'password' && <button type="button" className="text-primary hover:underline" onClick={() => { setRegisterMode(!registerMode); setError(null) }}>
+                  {registerMode ? 'I already have an account' : 'Create an account'}
+                </button>}
+              </div>
             </form>
           )}
         </CardContent>
