@@ -1,58 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap');
 @import 'tailwindcss';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: oklch(0.99 0.003 240);
-  --foreground: oklch(0.19 0.02 255);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.19 0.02 255);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.19 0.02 255);
-  --primary: oklch(0.42 0.13 245);
-  --primary-foreground: oklch(0.98 0.005 240);
-  --secondary: oklch(0.95 0.02 235);
-  --secondary-foreground: oklch(0.25 0.03 250);
-  --muted: oklch(0.96 0.01 240);
-  --muted-foreground: oklch(0.48 0.02 255);
-  --accent: oklch(0.9 0.07 195);
-  --accent-foreground: oklch(0.2 0.04 220);
-  --destructive: oklch(0.55 0.2 25);
-  --destructive-foreground: oklch(0.98 0.005 240);
-  --success: oklch(0.6 0.14 155);
-  --success-foreground: oklch(0.98 0.005 240);
-  --warning: oklch(0.75 0.16 75);
-  --warning-foreground: oklch(0.2 0.04 80);
-  --border: oklch(0.9 0.01 240);
-  --input: oklch(0.9 0.01 240);
-  --ring: oklch(0.55 0.1 245);
-  --radius: 0.75rem;
-}
-
-.dark {
-  --background: oklch(0.16 0.02 250);
-  --foreground: oklch(0.95 0.01 240);
-  --card: oklch(0.2 0.02 250);
-  --card-foreground: oklch(0.95 0.01 240);
-  --popover: oklch(0.2 0.02 250);
-  --popover-foreground: oklch(0.95 0.01 240);
-  --primary: oklch(0.75 0.1 220);
-  --primary-foreground: oklch(0.15 0.02 250);
-  --secondary: oklch(0.28 0.03 250);
-  --secondary-foreground: oklch(0.95 0.01 240);
-  --muted: oklch(0.26 0.02 250);
-  --muted-foreground: oklch(0.68 0.02 240);
-  --accent: oklch(0.35 0.06 200);
-  --accent-foreground: oklch(0.95 0.02 200);
-  --destructive: oklch(0.6 0.19 25);
-  --destructive-foreground: oklch(0.98 0.005 240);
-  --success: oklch(0.62 0.13 155);
-  --success-foreground: oklch(0.15 0.02 250);
-  --warning: oklch(0.72 0.15 75);
-  --warning-foreground: oklch(0.15 0.02 250);
-  --border: oklch(0.32 0.02 250);
-  --input: oklch(0.32 0.02 250);
-  --ring: oklch(0.6 0.1 220);
+  --color-bg: #f3f2f2;
+  --color-surface: #eae9e9;
+  --color-text: #201e1d;
+  --color-accent: #ec3013;
+  --color-accent-700: #ae1800;
+  --color-divider: color-mix(in srgb, #201e1d 40%, transparent);
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #2d2b2b 14%, transparent);
+  --shadow-md: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent);
+  --shadow-lg: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
+  --background: var(--color-bg);
+  --foreground: var(--color-text);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-text);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-text);
+  --primary: var(--color-accent);
+  --primary-foreground: var(--color-bg);
+  --secondary: #eae7e7;
+  --secondary-foreground: var(--color-text);
+  --muted: #eae7e7;
+  --muted-foreground: color-mix(in srgb, var(--color-text) 55%, transparent);
+  --accent: #fff2ef;
+  --accent-foreground: var(--color-accent-700);
+  --destructive: var(--color-accent-700);
+  --destructive-foreground: var(--color-bg);
+  --success: #605d5d;
+  --success-foreground: var(--color-bg);
+  --warning: #ffc4b8;
+  --warning-foreground: #4d170e;
+  --border: var(--color-divider);
+  --input: var(--color-divider);
+  --ring: var(--color-accent);
+  --radius: 0;
 }
 
 @theme inline {
@@ -87,20 +71,45 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
 
   html {
     color-scheme: light;
   }
 
-  html.dark {
-    color-scheme: dark;
-  }
-
   body {
     @apply bg-background text-foreground;
-    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0 0 8px;
+  }
+
+  a {
+    color: var(--color-accent);
+    text-underline-offset: 3px;
+  }
+
+  p {
+    margin: 0 0 12px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-accent) 30%, transparent);
   }
 
   #root {
@@ -111,6 +120,10 @@
 }
 
 @layer utilities {
+  .elev-sm { box-shadow: var(--shadow-sm); }
+  .elev-md { box-shadow: var(--shadow-md); }
+  .elev-lg { box-shadow: var(--shadow-lg); }
+  .rounded-xl, .rounded-lg, .rounded-md, .rounded-sm { border-radius: 0 !important; }
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }

@@ -19,9 +19,9 @@ export function TopBar() {
   const online = useOnlineStatus()
 
   return (
-    <header className="flex items-center justify-between border-b border-border bg-card px-4 py-3 sm:px-6">
+    <header className="flex items-center justify-between border-b-2 border-border bg-background px-4 py-3 sm:px-6">
       <div>
-        <p className="text-sm font-semibold leading-tight">{activeTrip?.name ?? 'Iceland Trip'}</p>
+        <p className="text-lg font-extrabold leading-tight">{activeTrip?.name ?? 'Iceland Trip'}</p>
         {activeTrip?.start_date && activeTrip?.end_date && (
           <p className="text-xs text-muted-foreground">
             {activeTrip.start_date} – {activeTrip.end_date} · {activeTrip.timezone}
