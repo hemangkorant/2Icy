@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
+import { BookingImportButton } from '@/components/common/booking-import-dialog'
 import { EmptyState, ErrorState, LoadingState } from '@/components/common/states'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,7 @@ import { useTrip } from '@/context/trip-context'
 import { useRealtimeTable } from '@/hooks/use-realtime-table'
 import { toast } from '@/hooks/use-toast'
 import { formatFriendlyDateTime, relativeToNow } from '@/lib/dates'
+import type { ImportedFlight } from '@/lib/booking-import'
 import type { Tables } from '@/types/database'
 import { type FlightFormInput, type FlightFormValues, flightSchema } from '@/types/schemas'
 
@@ -65,6 +67,17 @@ export function FlightsSection() {
   return (
     <div className="space-y-3">
       <div className="flex justify-end">
+        <div className="flex gap-2">
+          <BookingImportButton
+            kind="flight"
+            onImport={async (bookings) => {
+              for (const booking of bookings) {
+                const { kind: _kind, ...flight } = booking as ImportedFlight
+                void _kind
+                await flights.insert({ trip_id: activeTripId!, ...flight })
+              }
+            }}
+          />
         <Button
           size="sm"
           onClick={() => {
@@ -74,6 +87,7 @@ export function FlightsSection() {
         >
           <Plus className="size-4" /> Add flight
         </Button>
+        </div>
       </div>
 
       {flights.data.length === 0 ? (

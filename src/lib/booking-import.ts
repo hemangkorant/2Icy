@@ -57,10 +57,11 @@ function toIsoLocal(date: string, time: string) {
 }
 
 function parseDate(value: string) {
-  const match = value.match(/(\d{1,2})\s+(October|November|December|January|February|March|April|May|June|July|August|September)\s+(\d{4})/i)
+  const match = value.match(/(\d{1,2})[\s,]+(October|November|December|January|February|March|April|May|June|July|August|September|Oct|Nov|Dec|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep)[\s,]+(\d{4})?/i)
   if (!match) return ''
+  const year = match[3] ?? new Date().getFullYear().toString()
   const month = new Date(`${match[2]} 1, 2000`).getMonth() + 1
-  return `${match[3]}-${String(month).padStart(2, '0')}-${match[1].padStart(2, '0')}`
+  return `${year}-${String(month).padStart(2, '0')}-${match[1].padStart(2, '0')}`
 }
 
 function parseTime(value: string) {
@@ -103,10 +104,42 @@ function parseFlightText(text: string): ImportedFlight[] {
 }
 
 function parseAccommodationText(text: string): ImportedAccommodation | null {
-  const name = firstMatch(text, /^(.*?)\nAddress:/im)
-  const address = firstMatch(text, /Address:\s*([^\n]+)/i)
-  const phone = firstMatch(text, /Phone:\s*([^\n]+)/i)
-  const confirmation = firstMatch(text, /CONFIRMATION NUMBER:\s*([\d.]+)/i)
+  const isAirbnb = /Confirmation code\s+[A-Z0-9]+/i.test(text)
+  const name = isAirbnb
+    ? firstMatch(text, /(?:Call host:[^\n]+\n)?\s*([^\n]+)\n(?:Check-in|Check in)/i)
+    : firstMatch(text, /^(.*?)\nAddress:/im)
+  const address = isAirbnb
+    ? firstMatch(text, /Confirmation code\s+[A-Z0-9]+\s+([^\n]+)/i)
+    : firstMatch(text, /Address:\s*([^\n]+)/i)
+  const phone = isAirbnb ? firstMatch(text, /Call host:\s*([^\n]+)/i) : firstMatch(text, /Phone:\s*([^\n]+)/i)
+  const confirmation = isAirbnb
+    ? firstMatch(text, /Confirmation code\s+([A-Z0-9]+)/i)
+    : firstMatch(text, /CONFIRMATION NUMBER:\s*([\d.]+)/i)
+  if (isAirbnb) {
+    const checkIn = text.match(/Check-in\s+(\d{1,2}:\d{2}\s*[AP]M)\s*,?\s*\w+,?\s*(\w+\s+\d{1,2})/i)
+    const checkOut = text.match(/Checkout\s+(\d{1,2}:\d{2}\s*[AP]M)\s*,?\s*\w+,?\s*(\w+\s+\d{1,2})/i)
+    const year = new Date().getFullYear().toString()
+    if (!name || !address || !confirmation || !checkIn || !checkOut) return null
+    const parseShortDate = (value: string) => {
+      const parts = value.match(/(\w+)\s+(\d{1,2})/)
+      return parts ? parseDate(`${parts[2]} ${parts[1]} ${year}`) : ''
+    }
+    return {
+      kind: 'accommodation',
+      name: clean(name),
+      check_in_date: parseShortDate(checkIn[2]),
+      check_out_date: parseShortDate(checkOut[2]),
+      check_in_time: parseTime(checkIn[1]),
+      check_out_time: parseTime(checkOut[1]),
+      address: clean(address),
+      confirmation_number: confirmation,
+      contact_phone: clean(phone),
+      booking_source: 'Airbnb',
+      parking_notes: '',
+      cancellation_policy: '',
+      notes: clean(text.match(/Amount paid\s*([^\n]+)/i)?.[1] ?? ''),
+    }
+  }
   const checkIn = text.match(/CHECK-IN\s+(\d{1,2})\s+([A-Z]+)\s+\w+\s+(?:from\s+)?([\d: -]+)/i)
   const checkOut = text.match(/CHECK-OUT\s+(\d{1,2})\s+([A-Z]+)\s+\w+\s+(?:until\s+)?([\d: -]+)/i)
   const year = firstMatch(text, /(?:OCTOBER|NOVEMBER|DECEMBER|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER)[\s\S]{0,80}(20\d{2})/i) || new Date().getFullYear().toString()

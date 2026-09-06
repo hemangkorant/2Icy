@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
+import { BookingImportButton } from '@/components/common/booking-import-dialog'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, LoadingState, OfflineNotice } from '@/components/common/states'
 import { Button } from '@/components/ui/button'
@@ -18,6 +19,7 @@ import { toast } from '@/hooks/use-toast'
 import { formatFriendlyDate } from '@/lib/dates'
 import { googleMapsSearchUrl } from '@/lib/routing-adapter'
 import type { Tables } from '@/types/database'
+import type { ImportedAccommodation } from '@/lib/booking-import'
 import { type AccommodationFormInput, type AccommodationFormValues, accommodationSchema } from '@/types/schemas'
 
 export function StaysPage() {
@@ -65,15 +67,27 @@ export function StaysPage() {
         title="Stays"
         description="Accommodation bookings for the trip."
         action={
-          <Button
-            size="sm"
-            onClick={() => {
-              setEditing(null)
-              setFormOpen(true)
-            }}
-          >
-            <Plus className="size-4" /> Add stay
-          </Button>
+          <div className="flex gap-2">
+            <BookingImportButton
+              kind="accommodation"
+              onImport={async (bookings) => {
+                for (const booking of bookings) {
+                  const { kind: _kind, ...stay } = booking as ImportedAccommodation
+                  void _kind
+                  await stays.insert({ trip_id: activeTripId!, ...stay })
+                }
+              }}
+            />
+            <Button
+              size="sm"
+              onClick={() => {
+                setEditing(null)
+                setFormOpen(true)
+              }}
+            >
+              <Plus className="size-4" /> Add stay
+            </Button>
+          </div>
         }
       />
       {stays.isOffline && <div className="mb-3"><OfflineNotice savedAt={stays.staleSince} /></div>}

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
+import { BookingImportButton } from '@/components/common/booking-import-dialog'
 import { EmptyState, ErrorState, LoadingState } from '@/components/common/states'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,6 +18,7 @@ import { useTrip } from '@/context/trip-context'
 import { useRealtimeTable } from '@/hooks/use-realtime-table'
 import { toast } from '@/hooks/use-toast'
 import { formatFriendlyDateTime } from '@/lib/dates'
+import type { ImportedRentalCar } from '@/lib/booking-import'
 import { supabase } from '@/lib/supabase'
 import type { ChecklistStage, Tables } from '@/types/database'
 import { type RentalCarFormInput, type RentalCarFormValues, rentalCarSchema } from '@/types/schemas'
@@ -80,6 +82,17 @@ export function RentalCarSection() {
   return (
     <div className="space-y-3">
       <div className="flex justify-end">
+        <div className="flex gap-2">
+          <BookingImportButton
+            kind="rental_car"
+            onImport={async (bookings) => {
+              const booking = bookings[0] as ImportedRentalCar
+              const { kind: _kind, ...rentalCar } = booking
+              void _kind
+              const created = await cars.insert({ trip_id: activeTripId!, ...rentalCar })
+              await seedChecklist(created.id)
+            }}
+          />
         <Button
           size="sm"
           onClick={() => {
@@ -89,6 +102,7 @@ export function RentalCarSection() {
         >
           <Plus className="size-4" /> Add rental car
         </Button>
+        </div>
       </div>
 
       {cars.data.length === 0 ? (
