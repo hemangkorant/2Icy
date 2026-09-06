@@ -16,6 +16,8 @@ export const supabase = createClient<Database>(supabaseUrl ?? '', supabaseAnonKe
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    storage: window.localStorage,
+    storageKey: '2icy-auth-session',
   },
   realtime: {
     params: { eventsPerSecond: 5 },
