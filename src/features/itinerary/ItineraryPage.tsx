@@ -3,6 +3,7 @@ import { Plus, Printer, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
+import { ItineraryImportButton } from '@/components/common/itinerary-import-dialog'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, LoadingState, OfflineNotice } from '@/components/common/states'
 import { Button } from '@/components/ui/button'
@@ -14,6 +15,8 @@ import { cn } from '@/lib/utils'
 import type { Tables } from '@/types/database'
 import type { ItineraryDayFormValues, ItineraryStopFormValues } from '@/types/schemas'
 import { toast } from '@/hooks/use-toast'
+import { supabase } from '@/lib/supabase'
+import type { ImportedItineraryDay } from '@/lib/itinerary-import'
 
 import { DayForm } from './DayForm'
 import { DaylightCard } from './DaylightCard'
@@ -76,15 +79,49 @@ export function ItineraryPage() {
         title="Itinerary"
         description="Day-by-day plan for the trip."
         action={
-          <Button
-            size="sm"
-            onClick={() => {
-              setEditingDay(null)
-              setDayFormOpen(true)
-            }}
-          >
-            <Plus className="size-4" /> Add day
-          </Button>
+          <div className="flex gap-2">
+            <ItineraryImportButton
+              onImport={async (importedDays: ImportedItineraryDay[]) => {
+                for (const [dayIndex, importedDay] of importedDays.entries()) {
+                  const { data: createdDay, error: dayError } = await supabase
+                    .from('itinerary_days')
+                    .insert({
+                      trip_id: activeTripId!,
+                      date: importedDay.date,
+                      sort_order: days.data.length + dayIndex,
+                      title: importedDay.title || null,
+                      overnight_location: importedDay.overnight_location || null,
+                      notes: importedDay.notes || null,
+                    })
+                    .select('id')
+                    .single()
+                  if (dayError || !createdDay) throw new Error(dayError?.message ?? 'Could not create itinerary day')
+                  if (importedDay.stops.length > 0) {
+                    const { error: stopsError } = await supabase.from('itinerary_stops').insert(
+                      importedDay.stops.map((stop, position) => ({
+                        day_id: createdDay.id,
+                        position,
+                        name: stop.name,
+                        activity_notes: stop.activity_notes || null,
+                        status: 'planned',
+                      })),
+                    )
+                    if (stopsError) throw new Error(stopsError.message)
+                  }
+                }
+                await days.refresh()
+              }}
+            />
+            <Button
+              size="sm"
+              onClick={() => {
+                setEditingDay(null)
+                setDayFormOpen(true)
+              }}
+            >
+              <Plus className="size-4" /> Add day
+            </Button>
+          </div>
         }
       />
 
