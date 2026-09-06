@@ -118,7 +118,7 @@ function parseAccommodationText(text: string): ImportedAccommodation | null {
   const phone = isAirbnb ? fieldValue(text, 'Call host') : fieldValue(text, 'Phone')
   const confirmation = isAirbnb
     ? fieldValue(text, 'Confirmation code', '[A-Z0-9]+')
-    : fieldValue(text, 'CONFIRMATION NUMBER', '[\d.]+')
+    : fieldValue(text, 'CONFIRMATION NUMBER', '[0-9.]+')
   if (isAirbnb) {
     const checkIn = text.match(/Check-in\s+(\d{1,2}:\d{2}\s*[AP]M)\s*,?\s*\w+,?\s*(\w+\s+\d{1,2})/i)
     const checkOut = text.match(/Checkout\s+(\d{1,2}:\d{2}\s*[AP]M)\s*,?\s*\w+,?\s*(\w+\s+\d{1,2})/i)

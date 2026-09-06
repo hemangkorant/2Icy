@@ -29,12 +29,12 @@ export function TopBar() {
         )}
       </div>
       <div className="flex items-center gap-3">
-        <span title={online ? 'Online' : 'Offline — showing cached data'} className="text-muted-foreground">
-          {online ? <Wifi className="size-4" /> : <WifiOff className="size-4 text-warning" />}
+        <span title={online ? 'Online' : 'Offline — showing cached data'} className="text-muted-foreground" aria-label={online ? 'Online' : 'Offline — showing cached data'}>
+          {online ? <Wifi className="size-4" aria-hidden="true" /> : <WifiOff className="size-4 text-warning" aria-hidden="true" />}
         </span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-2">
+            <Button variant="ghost" size="sm" className="gap-2" aria-label="Open account menu">
               <span className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                 {(profile?.full_name ?? profile?.email ?? '?').slice(0, 1).toUpperCase()}
               </span>

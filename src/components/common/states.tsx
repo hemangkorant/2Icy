@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button'
 
 export function LoadingState({ label = 'Loading…' }: { label?: string }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-2 py-16 text-muted-foreground">
-      <Loader2 className="size-6 animate-spin" />
+    <div className="flex flex-1 flex-col items-center justify-center gap-2 py-16 text-muted-foreground" role="status" aria-live="polite">
+      <Loader2 className="size-6 animate-spin" aria-hidden="true" />
       <p className="text-sm">{label}</p>
     </div>
   )
@@ -37,8 +37,8 @@ export function EmptyState({
 
 export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-destructive/40 bg-destructive/5 py-14 px-6 text-center">
-      <AlertTriangle className="size-8 text-destructive" />
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-destructive/40 bg-destructive/5 py-14 px-6 text-center" role="alert">
+      <AlertTriangle className="size-8 text-destructive" aria-hidden="true" />
       <p className="text-sm text-destructive">{message}</p>
       {onRetry && (
         <Button variant="outline" size="sm" onClick={onRetry}>
