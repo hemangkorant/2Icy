@@ -27,7 +27,7 @@ You need a free [Supabase](https://supabase.com) project (or the local Supabase 
 1. Create a project at [supabase.com](https://supabase.com/dashboard).
 2. In the SQL Editor, run every file in [`supabase/migrations/`](supabase/migrations) **in filename order** (`0001_...` through `0010_...`). Each is idempotent-ish but not re-runnable after the fact — run once, in order.
 3. In **Authentication → URL Configuration**, set the Site URL and an additional Redirect URL to your local dev URL (`http://127.0.0.1:5173`) and later your deployed URL.
-4. In **Authentication → Email**, magic link/OTP sign-in is on by default; no extra config needed. Password auth is unused by this app.
+4. In **Authentication → Email**, enable the providers you want to use. The app supports password sign-in/account creation and magic-link fallback. Email confirmation and SMTP delivery are configured in Supabase, not in the frontend.
 5. Copy your Project URL and anon/public key from **Project Settings → API**.
 6. Do **not** run [`supabase/seed.sql`](supabase/seed.sql) against this hosted project — it's local-dev-only demo data (see the warning at the top of that file).
 
@@ -68,6 +68,16 @@ Open the printed local URL, sign in with your email (a magic link is sent — ch
 | `npm run test` | Run the Vitest suite once |
 | `npm run test:watch` | Vitest in watch mode |
 | `npm run format` | Prettier write |
+
+## UI components
+
+This app uses Radix primitives with shadcn-style component APIs in [`src/components/ui/`](src/components/ui). The repository includes [`components.json`](components.json), so the shadcn CLI can target the existing Vite/Tailwind setup:
+
+```bash
+npx shadcn@latest add [component]
+```
+
+New components should use the existing `@/components/ui` and `@/lib/utils` aliases, preserve the current CSS-variable theme in [`src/index.css`](src/index.css), and follow the existing `Button`, `Dialog`, `Input`, and `Card` patterns. Review generated components before committing them; do not replace the current design system wholesale.
 
 ## How the shared-trip model works
 
