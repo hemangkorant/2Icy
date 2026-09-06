@@ -54,6 +54,7 @@ export type ImportedBooking = ImportedFlight | ImportedAccommodation | ImportedR
 
 const clean = (value: string) => value.replace(/\s+/g, ' ').trim()
 const firstMatch = (text: string, pattern: RegExp) => text.match(pattern)?.[1]?.trim() ?? ''
+const fieldValue = (text: string, label: string, pattern = '[^\\n]+') => firstMatch(text, new RegExp(`${label}\\s*[:]?\\s*(${pattern})`, 'i'))
 
 function toIsoLocal(date: string, time: string) {
   return `${date}T${time}:00`
@@ -110,14 +111,14 @@ function parseAccommodationText(text: string): ImportedAccommodation | null {
   const isAirbnb = /Confirmation code\s+[A-Z0-9]+/i.test(text)
   const name = isAirbnb
     ? firstMatch(text, /(?:Call host:[^\n]+\n)?\s*([^\n]+)\n(?:Check-in|Check in)/i)
-    : firstMatch(text, /^(.*?)\nAddress:/im)
+    : firstMatch(text, /(?:^|\n)\s*([^\n]+)\s*\n\s*Address\s*:/i)
   const address = isAirbnb
-    ? firstMatch(text, /Confirmation code\s+[A-Z0-9]+\s+([^\n]+)/i)
-    : firstMatch(text, /Address:\s*([^\n]+)/i)
-  const phone = isAirbnb ? firstMatch(text, /Call host:\s*([^\n]+)/i) : firstMatch(text, /Phone:\s*([^\n]+)/i)
+    ? firstMatch(text, /Confirmation code\s+[A-Z0-9]+\s*\n?\s*([^\n]+)/i)
+    : fieldValue(text, 'Address')
+  const phone = isAirbnb ? fieldValue(text, 'Call host') : fieldValue(text, 'Phone')
   const confirmation = isAirbnb
-    ? firstMatch(text, /Confirmation code\s+([A-Z0-9]+)/i)
-    : firstMatch(text, /CONFIRMATION NUMBER:\s*([\d.]+)/i)
+    ? fieldValue(text, 'Confirmation code', '[A-Z0-9]+')
+    : fieldValue(text, 'CONFIRMATION NUMBER', '[\d.]+')
   if (isAirbnb) {
     const checkIn = text.match(/Check-in\s+(\d{1,2}:\d{2}\s*[AP]M)\s*,?\s*\w+,?\s*(\w+\s+\d{1,2})/i)
     const checkOut = text.match(/Checkout\s+(\d{1,2}:\d{2}\s*[AP]M)\s*,?\s*\w+,?\s*(\w+\s+\d{1,2})/i)
@@ -145,7 +146,7 @@ function parseAccommodationText(text: string): ImportedAccommodation | null {
   }
   const checkIn = text.match(/CHECK-IN\s+(\d{1,2})\s+([A-Z]+)\s+\w+\s+(?:from\s+)?([\d: -]+)/i)
   const checkOut = text.match(/CHECK-OUT\s+(\d{1,2})\s+([A-Z]+)\s+\w+\s+(?:until\s+)?([\d: -]+)/i)
-  const year = firstMatch(text, /(?:OCTOBER|NOVEMBER|DECEMBER|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER)[\s\S]{0,80}(20\d{2})/i) || new Date().getFullYear().toString()
+  const year = firstMatch(text, /(20\d{2})/) || new Date().getFullYear().toString()
   const checkInDate = checkIn ? parseDate(`${checkIn[1]} ${checkIn[2]} ${year}`) : ''
   const checkOutDate = checkOut ? parseDate(`${checkOut[1]} ${checkOut[2]} ${year}`) : ''
   if (!name || !address || !confirmation || !checkInDate || !checkOutDate) return null
