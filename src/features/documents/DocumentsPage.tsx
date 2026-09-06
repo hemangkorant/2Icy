@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Download, FileLock2, Lock, Plus, Trash2, Unlock } from 'lucide-react'
+import { Download, FileLock2, FileUp, Lock, Plus, Trash2, Unlock } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -20,6 +20,7 @@ import { useVault } from '@/context/vault-context'
 import { useRealtimeTable } from '@/hooks/use-realtime-table'
 import { toast } from '@/hooks/use-toast'
 import { decryptBytes, decryptJson } from '@/lib/crypto'
+import { parseBookingPdf, type ImportedBooking } from '@/lib/booking-import'
 import { uploadEncryptedDocument, type DocumentMetadata } from '@/lib/document-upload'
 import { supabase } from '@/lib/supabase'
 import type { DocumentCategory, Tables } from '@/types/database'
@@ -160,6 +161,7 @@ function VaultContents() {
   const { key } = useVault()
   const docs = useRealtimeTable('documents', 'trip_id', activeTripId, { orderBy: 'created_at', ascending: false })
   const [uploadOpen, setUploadOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
   const [deleting, setDeleting] = useState<Tables<'documents'> | null>(null)
 
   if (docs.loading) return <LoadingState label="Loading documents…" />
@@ -201,6 +203,9 @@ function VaultContents() {
         <Button size="sm" onClick={() => setUploadOpen(true)}>
           <Plus className="size-4" /> Upload document
         </Button>
+        <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
+          <FileUp className="size-4" /> Import booking PDF
+        </Button>
       </div>
 
       {docs.data.length === 0 ? (
@@ -221,6 +226,61 @@ function VaultContents() {
           await uploadEncryptedDocument({ tripId: activeTripId, ownerId: user.id, vaultKey: key, category, title, file })
         }}
       />
+      <BookingImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImport={async (file, bookings) => {
+          if (!key || !activeTripId || !user) return
+          const insertedIds: string[] = []
+          for (const booking of bookings) {
+            if (booking.kind === 'flight') {
+              const { kind: _kind, ...flight } = booking
+              const { data, error } = await supabase
+                .from('flights')
+                .insert({ trip_id: activeTripId, ...flight })
+                .select('id')
+                .single()
+              if (error) throw new Error(error.message)
+              insertedIds.push(data.id)
+            } else if (booking.kind === 'accommodation') {
+              const { kind: _kind, ...accommodation } = booking
+              const { data, error } = await supabase
+                .from('accommodations')
+                .insert({ trip_id: activeTripId, ...accommodation })
+                .select('id')
+                .single()
+              if (error) throw new Error(error.message)
+              insertedIds.push(data.id)
+            } else {
+              const { kind: _kind, ...rentalCar } = booking
+              const { data, error } = await supabase
+                .from('rental_cars')
+                .insert({ trip_id: activeTripId, ...rentalCar })
+                .select('id')
+                .single()
+              if (error) throw new Error(error.message)
+              insertedIds.push(data.id)
+            }
+          }
+          const category = bookings[0]?.kind === 'flight'
+            ? 'flight_confirmation'
+            : bookings[0]?.kind === 'accommodation'
+              ? 'accommodation_confirmation'
+              : 'car_rental_confirmation'
+          await uploadEncryptedDocument({
+            tripId: activeTripId,
+            ownerId: user.id,
+            vaultKey: key,
+            category,
+            linkedEntityType: bookings[0]?.kind === 'flight' ? 'flight' : bookings[0]?.kind === 'accommodation' ? 'accommodation' : 'rental_car',
+            linkedEntityId: insertedIds[0] ?? null,
+            title: file.name,
+            file,
+          })
+          await docs.refresh()
+          toast({ title: 'Booking imported', description: `${bookings.length} record${bookings.length === 1 ? '' : 's'} added.` })
+        }}
+      />
       <ConfirmDialog
         open={Boolean(deleting)}
         onOpenChange={(o) => !o && setDeleting(null)}
@@ -231,6 +291,96 @@ function VaultContents() {
         onConfirm={() => deleting && handleDelete(deleting)}
       />
     </div>
+  )
+}
+
+function BookingImportDialog({
+  open,
+  onOpenChange,
+  onImport,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onImport: (file: File, bookings: ImportedBooking[]) => Promise<void>
+}) {
+  const [file, setFile] = useState<File | null>(null)
+  const [bookings, setBookings] = useState<ImportedBooking[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [parsing, setParsing] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (!open) {
+      setFile(null)
+      setBookings([])
+      setError(null)
+    }
+  }, [open])
+
+  const selectFile = async (nextFile: File | null) => {
+    setFile(nextFile)
+    setBookings([])
+    setError(null)
+    if (!nextFile) return
+    setParsing(true)
+    try {
+      const parsed = await parseBookingPdf(nextFile)
+      if (parsed.length === 0) throw new Error('No supported flight, stay, or rental booking was detected.')
+      setBookings(parsed)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not read this PDF.')
+    } finally {
+      setParsing(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Import booking PDF</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">The PDF is read in your browser. Review the detected records before they are added to your trip.</p>
+          <Input type="file" accept="application/pdf" onChange={(event) => void selectFile(event.target.files?.[0] ?? null)} />
+          {parsing && <p className="text-sm text-muted-foreground">Reading PDF…</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          {bookings.length > 0 && (
+            <div className="space-y-2">
+              {bookings.map((booking, index) => (
+                <Card key={`${booking.kind}-${index}`}>
+                  <CardContent className="space-y-1 p-3 text-sm">
+                    <p className="font-medium capitalize">{booking.kind.replace('_', ' ')}</p>
+                    {booking.kind === 'flight' && <p>{booking.airline} {booking.flight_number} · {booking.departure_airport} → {booking.arrival_airport}</p>}
+                    {booking.kind === 'flight' && <p className="text-muted-foreground">{booking.departure_at} → {booking.arrival_at}</p>}
+                    {booking.kind === 'accommodation' && <p>{booking.name} · {booking.check_in_date} → {booking.check_out_date}</p>}
+                    {booking.kind === 'accommodation' && <p className="text-muted-foreground">{booking.address} · Confirmation {booking.confirmation_number}</p>}
+                    {booking.kind === 'rental_car' && <p>{booking.rental_company} · {booking.car_model}</p>}
+                    {booking.kind === 'rental_car' && <p className="text-muted-foreground">{booking.pickup_at} → {booking.dropoff_at} · Confirmation {booking.confirmation_number}</p>}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button disabled={!file || bookings.length === 0 || parsing || saving} onClick={async () => {
+            if (!file || bookings.length === 0) return
+            setSaving(true)
+            try {
+              await onImport(file, bookings)
+              onOpenChange(false)
+            } catch (e) {
+              setError(e instanceof Error ? e.message : 'Could not save imported booking.')
+            } finally {
+              setSaving(false)
+            }
+          }}>
+            {saving ? 'Importing…' : 'Confirm import'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
