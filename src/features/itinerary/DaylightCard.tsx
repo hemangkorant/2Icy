@@ -1,4 +1,5 @@
-import { Sun, SunDim } from 'lucide-react'
+import { IconSunLow, IconSunrise, IconSunset } from '@tabler/icons-react'
+import type { ReactNode } from 'react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DEFAULT_LAT, DEFAULT_LNG, formatDuration, formatTime, getDaylightWarning, getDaylightWindow } from '@/lib/daylight'
@@ -25,28 +26,31 @@ export function DaylightCard({
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-sm">
-          <Sun className="size-4 text-warning" /> Daylight window
+          <span className="flex size-7 items-center justify-center rounded-full bg-[var(--color-warning-tint)] text-[var(--color-warning-ink)]">
+            <IconSunrise className="size-4" />
+          </span>
+          Daylight window
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
           <Stat label="Civil dawn" value={formatTime(window.dawn)} />
-          <Stat label="Sunrise" value={formatTime(window.sunrise)} />
-          <Stat label="Sunset" value={formatTime(window.sunset)} />
+          <Stat label="Sunrise" value={formatTime(window.sunrise)} icon={<IconSunrise className="size-3.5" />} />
+          <Stat label="Sunset" value={formatTime(window.sunset)} icon={<IconSunset className="size-3.5" />} />
           <Stat label="Civil dusk" value={formatTime(window.dusk)} />
         </div>
         <p className="text-xs text-muted-foreground">
           {formatDuration(window.daylightMinutes)} of daylight, {formatDuration(window.civilDaylightMinutes)} of usable civil light.
         </p>
-        <div className="relative h-2 w-full rounded-full bg-secondary">
+        <div className="relative h-2 w-full rounded-full bg-muted">
           <div
-            className="absolute h-2 rounded-full bg-warning/70"
+            className="absolute h-2 rounded-full bg-[var(--color-warning)]"
             style={{ left: `${Math.max(0, dayStartPct)}%`, width: `${Math.min(100, dayWidthPct)}%` }}
           />
         </div>
         {warning && (
           <p className="flex items-start gap-1.5 rounded-md bg-warning/10 p-2 text-xs text-warning-foreground">
-            <SunDim className="mt-0.5 size-3.5 shrink-0" /> {warning}
+            <IconSunLow className="mt-0.5 size-3.5 shrink-0" /> {warning}
           </p>
         )}
       </CardContent>
@@ -54,10 +58,13 @@ export function DaylightCard({
   )
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, icon }: { label: string; value: string; icon?: ReactNode }) {
   return (
     <div>
-      <p className="text-muted-foreground">{label}</p>
+      <p className="flex items-center gap-1 text-muted-foreground">
+        {icon}
+        {label}
+      </p>
       <p className="font-medium">{value}</p>
     </div>
   )

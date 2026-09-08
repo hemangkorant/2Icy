@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from 'lucide-react'
+import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -38,7 +38,7 @@ export function VehicleChecklist({ rentalCarId, stage }: { rentalCarId: string; 
               {item.label}
             </span>
             <Button variant="ghost" size="icon" className="size-7" onClick={() => items.remove(item.id)} aria-label="Remove">
-              <Trash2 className="size-3.5" />
+              <IconTrash className="size-3.5" />
             </Button>
           </div>
         ))}
@@ -52,7 +52,7 @@ export function VehicleChecklist({ rentalCarId, stage }: { rentalCarId: string; 
           onKeyDown={(e) => e.key === 'Enter' && addItem()}
         />
         <Button size="sm" variant="outline" onClick={addItem}>
-          <Plus className="size-3.5" />
+          <IconPlus className="size-3.5" />
         </Button>
       </div>
     </div>

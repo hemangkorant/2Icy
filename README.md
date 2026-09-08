@@ -1,6 +1,6 @@
-# Iceland Trip Tracker
+# Roamio
 
-A shared, installable trip-management PWA for two people planning and running an Iceland road trip. Day-by-day itinerary with maps and driving segments, daylight windows, stays, flights, rental car + fuel tracking, booked activities, a safety/weather dashboard (manual review, official links only), expenses with manual FX, an end-to-end encrypted document vault, packing list, pre-trip tasks, and emergency contacts — all shared in real time between both travelers via Supabase, with offline-friendly caching for the read views.
+A shared, installable trip-management PWA for people planning and running a trip together — currently set up for an Iceland road trip, but generic enough to run any destination. Day-by-day itinerary with maps and driving segments, daylight windows, stays, flights, rental car + fuel tracking, booked activities, a safety/weather dashboard (manual review, official links only), expenses with manual FX, an end-to-end encrypted document vault, packing list, pre-trip tasks, and emergency contacts — all shared in real time between travelers via Supabase, with offline-friendly caching for the read views.
 
 See [CLAUDE.md](CLAUDE.md) for the original product brief this was built from.
 

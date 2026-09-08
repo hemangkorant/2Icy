@@ -20,6 +20,32 @@ function untypedFrom(table: TableName): any {
   return supabase.from(table)
 }
 
+/**
+ * Mirrors Postgres's default ORDER BY null handling (nulls sort as if larger
+ * than any non-null value) so realtime INSERT/UPDATE events — which only
+ * patch the locally cached array rather than re-querying — keep the same
+ * order the initial server-sorted fetch had, instead of leaving new/edited
+ * rows wherever they happened to land.
+ */
+function sortRows<T extends TableName>(rows: Row<T>[], orderBy: string | undefined, ascending: boolean): Row<T>[] {
+  if (!orderBy) return rows
+  const compare = (a: Row<T>, b: Row<T>) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const av = (a as any)[orderBy]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const bv = (b as any)[orderBy]
+    const aNull = av === null || av === undefined
+    const bNull = bv === null || bv === undefined
+    if (aNull && bNull) return 0
+    if (aNull) return 1
+    if (bNull) return -1
+    if (av < bv) return -1
+    if (av > bv) return 1
+    return 0
+  }
+  return [...rows].sort((a, b) => (ascending ? compare(a, b) : -compare(a, b)))
+}
+
 export class ConflictError<T extends TableName> extends Error {
   current: Row<T>
   constructor(current: Row<T>) {
@@ -103,11 +129,15 @@ export function useRealtimeTable<T extends TableName>(
             if (payload.eventType === 'INSERT') {
               const newRow = payload.new as Row<T>
               if (current.some((r) => (r as { id: string }).id === (newRow as { id: string }).id)) return current
-              return [...current, newRow]
+              return sortRows([...current, newRow], orderBy, ascending)
             }
             if (payload.eventType === 'UPDATE') {
               const newRow = payload.new as Row<T>
-              return current.map((r) => ((r as { id: string }).id === (newRow as { id: string }).id ? newRow : r))
+              return sortRows(
+                current.map((r) => ((r as { id: string }).id === (newRow as { id: string }).id ? newRow : r)),
+                orderBy,
+                ascending,
+              )
             }
             if (payload.eventType === 'DELETE') {
               const oldRow = payload.old as Row<T>
@@ -122,14 +152,11 @@ export function useRealtimeTable<T extends TableName>(
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [cacheKey, table, filterColumn, filterValue, enabled])
+  }, [cacheKey, table, filterColumn, filterValue, enabled, orderBy, ascending])
 
   const insert = useCallback(
     async (payload: InsertPayload<T>) => {
-      const { data: inserted, error: insertError } = await untypedFrom(table)
-        .insert(payload)
-        .select()
-        .single()
+      const { data: inserted, error: insertError } = await untypedFrom(table).insert(payload).select().single()
       if (insertError) throw new Error(insertError.message)
       return inserted as Row<T>
     },
@@ -145,11 +172,7 @@ export function useRealtimeTable<T extends TableName>(
           throw new ConflictError<T>(currentRow as Row<T>)
         }
       }
-      const { data: updated, error: updateError } = await untypedFrom(table)
-        .update(patch)
-        .eq('id', id)
-        .select()
-        .single()
+      const { data: updated, error: updateError } = await untypedFrom(table).update(patch).eq('id', id).select().single()
       if (updateError) throw new Error(updateError.message)
       return updated as Row<T>
     },

@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Banknote, Download, Plus, Trash2 } from 'lucide-react'
+import { IconCashBanknote, IconDownload, IconPlus, IconTrash } from '@tabler/icons-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -133,10 +133,10 @@ export function ExpensesPage() {
         action={
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={exportCsv}>
-              <Download className="size-4" /> Export CSV
+              <IconDownload className="size-4" /> Export CSV
             </Button>
             <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true) }}>
-              <Plus className="size-4" /> Add expense
+              <IconPlus className="size-4" /> Add expense
             </Button>
           </div>
         }
@@ -192,7 +192,7 @@ export function ExpensesPage() {
       </div>
 
       {expenses.data.length === 0 ? (
-        <EmptyState icon={<Banknote className="size-8" />} title="No expenses logged yet" description="Add spend as you go to keep a running total." />
+        <EmptyState icon={<IconCashBanknote className="size-8" />} title="No expenses logged yet" description="Add spend as you go to keep a running total." />
       ) : (
         <div className="space-y-2">
           {expenses.data.map((expense) => (
@@ -220,7 +220,7 @@ export function ExpensesPage() {
                     Edit
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => setDeleting(expense)} aria-label="Delete">
-                    <Trash2 className="size-4" />
+                    <IconTrash className="size-4" />
                   </Button>
                 </div>
               </CardContent>

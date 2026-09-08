@@ -1,4 +1,4 @@
-import { MoreHorizontal } from 'lucide-react'
+import { IconDots } from '@tabler/icons-react'
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 
@@ -14,7 +14,7 @@ export function BottomNav() {
 
   return (
     <>
-      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t-2 border-border bg-background md:hidden">
+      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-sm md:hidden">
         <div className="grid grid-cols-5">
           {primary.map((item) => (
             <NavLink
@@ -23,21 +23,29 @@ export function BottomNav() {
               end={item.to === '/'}
               className={({ isActive }) =>
                 cn(
-                  'flex flex-col items-center gap-0.5 py-2 text-[11px] font-semibold text-muted-foreground',
+                  'flex flex-col items-center gap-1 py-2.5 text-[11px] font-semibold text-muted-foreground transition-colors',
                   isActive && 'text-primary',
                 )
               }
             >
-              <item.icon className="size-5" />
-              {item.label === 'Safety & Weather' ? 'Safety' : item.label}
+              {({ isActive }) => (
+                <>
+                  <span className={cn('flex size-7 items-center justify-center rounded-full transition-colors', isActive && 'bg-accent')}>
+                    <item.icon className="size-5" />
+                  </span>
+                  {item.label === 'Safety & Weather' ? 'Safety' : item.label}
+                </>
+              )}
             </NavLink>
           ))}
           <button
             type="button"
             onClick={() => setMoreOpen(true)}
-            className="flex flex-col items-center gap-0.5 py-2 text-[11px] font-semibold text-muted-foreground"
+            className="flex flex-col items-center gap-1 py-2.5 text-[11px] font-semibold text-muted-foreground"
           >
-            <MoreHorizontal className="size-5" />
+            <span className="flex size-7 items-center justify-center rounded-full">
+              <IconDots className="size-5" />
+            </span>
             More
           </button>
         </div>
@@ -56,8 +64,8 @@ export function BottomNav() {
                 onClick={() => setMoreOpen(false)}
                 className={({ isActive }) =>
                   cn(
-                    'flex flex-col items-center gap-1.5 border border-border p-3 text-xs font-semibold text-muted-foreground',
-                    isActive && 'border-primary text-primary',
+                    'flex flex-col items-center gap-1.5 rounded-lg border border-border p-3 text-xs font-semibold text-muted-foreground transition-colors hover:border-foreground/25',
+                    isActive && 'border-primary bg-accent text-accent-foreground',
                   )
                 }
               >

@@ -1,9 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Download, FileLock2, FileUp, Lock, Plus, Trash2, Unlock } from 'lucide-react'
+import { IconDownload, IconFileUpload, IconLock, IconLockOpen, IconTrash, IconVault } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
+import { BulkUploadDialog } from '@/components/common/bulk-upload-dialog'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, LoadingState } from '@/components/common/states'
@@ -13,28 +14,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/context/auth-context'
 import { useTrip } from '@/context/trip-context'
 import { useVault } from '@/context/vault-context'
 import { useRealtimeTable } from '@/hooks/use-realtime-table'
 import { toast } from '@/hooks/use-toast'
-import { decryptBytes, decryptJson } from '@/lib/crypto'
 import { parseBookingPdf, type ImportedBooking } from '@/lib/booking-import'
-import { uploadEncryptedDocument, type DocumentMetadata } from '@/lib/document-upload'
+import { decryptDocumentTitle, downloadEncryptedDocument, uploadEncryptedDocument } from '@/lib/document-upload'
+import { formatFriendlyDate } from '@/lib/dates'
 import { supabase } from '@/lib/supabase'
-import type { DocumentCategory, Tables } from '@/types/database'
-
-const CATEGORIES: DocumentCategory[] = [
-  'passport',
-  'travel_insurance',
-  'flight_confirmation',
-  'accommodation_confirmation',
-  'car_rental_confirmation',
-  'tour_voucher',
-  'driving_licence',
-  'other',
-]
+import type { Tables } from '@/types/database'
 
 const passphraseSchema = z.object({ passphrase: z.string().min(8, 'Use at least 8 characters') })
 const confirmSchema = z.object({ passphrase: z.string().min(8, 'Use at least 8 characters'), confirm: z.string() })
@@ -52,7 +41,7 @@ export function DocumentsPage() {
         action={
           isUnlocked ? (
             <Button variant="outline" size="sm" onClick={lock}>
-              <Lock className="size-4" /> Lock vault
+              <IconLock className="size-4" /> Lock vault
             </Button>
           ) : undefined
         }
@@ -87,13 +76,13 @@ function VaultSetup({ onSetUp }: { onSetUp: (passphrase: string) => Promise<{ er
     <Card className="max-w-md">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <FileLock2 className="size-5" /> Set up your document vault
+          <IconVault className="size-5" /> Set up your document vault
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="rounded-md bg-warning/10 p-3 text-xs text-warning-foreground">
-          Choose a passphrase and share it with your partner outside this app (in person, or a password manager). It is
-          never stored anywhere — <span className="font-semibold">if you lose it, encrypted documents cannot be recovered.</span>
+          Choose a passphrase and share it with your partner outside this app (in person, or a password manager). It is never stored
+          anywhere — <span className="font-semibold">if you lose it, encrypted documents cannot be recovered.</span>
         </p>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3" noValidate>
           <div className="space-y-1.5">
@@ -136,7 +125,7 @@ function VaultUnlock({ onUnlock }: { onUnlock: (passphrase: string) => Promise<{
     <Card className="max-w-md">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <Unlock className="size-5" /> Unlock the vault
+          <IconLockOpen className="size-5" /> Unlock the vault
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -160,6 +149,7 @@ function VaultContents() {
   const { user } = useAuth()
   const { key } = useVault()
   const docs = useRealtimeTable('documents', 'trip_id', activeTripId, { orderBy: 'created_at', ascending: false })
+  const stays = useRealtimeTable('accommodations', 'trip_id', activeTripId, { orderBy: 'check_in_date' })
   const [uploadOpen, setUploadOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [deleting, setDeleting] = useState<Tables<'documents'> | null>(null)
@@ -169,6 +159,11 @@ function VaultContents() {
 
   const totalBytes = docs.data.reduce((sum, d) => sum + d.size_bytes, 0)
   const totalMb = (totalBytes / (1024 * 1024)).toFixed(1)
+  const stayOptions = stays.data.map((s) => ({
+    id: s.id,
+    label: `${s.name}${s.check_in_date ? ` — ${formatFriendlyDate(s.check_in_date)}` : ''}`,
+  }))
+  const stayNameById = new Map(stays.data.map((s) => [s.id, s.name]))
 
   const handleDelete = async (doc: Tables<'documents'>) => {
     await supabase.storage.from('trip-documents').remove([doc.storage_path])
@@ -178,19 +173,7 @@ function VaultContents() {
   const handleDownload = async (doc: Tables<'documents'>) => {
     if (!key) return
     try {
-      const meta = await decryptJson<DocumentMetadata>(key, doc.encrypted_metadata, doc.metadata_iv)
-      const { data, error } = await supabase.storage.from('trip-documents').download(doc.storage_path)
-      if (error || !data) throw new Error(error?.message ?? 'Download failed')
-      const cipherBuffer = await data.arrayBuffer()
-      const cipherBase64 = btoa(String.fromCharCode(...new Uint8Array(cipherBuffer)))
-      const plainBuffer = await decryptBytes(key, cipherBase64, doc.file_iv)
-      const blob = new Blob([plainBuffer], { type: meta.mimeType || 'application/octet-stream' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = meta.originalFileName || 'document'
-      a.click()
-      URL.revokeObjectURL(url)
+      await downloadEncryptedDocument(key, doc)
     } catch (e) {
       toast({ title: 'Could not decrypt document', description: e instanceof Error ? e.message : undefined, variant: 'destructive' })
     }
@@ -199,33 +182,53 @@ function VaultContents() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs text-muted-foreground">{docs.data.length} documents · {totalMb} MB stored</p>
-        <Button size="sm" onClick={() => setUploadOpen(true)}>
-          <Plus className="size-4" /> Upload document
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
-          <FileUp className="size-4" /> Import booking PDF
-        </Button>
+        <p className="text-xs text-muted-foreground">
+          {docs.data.length} documents · {totalMb} MB stored
+        </p>
+        <div className="flex gap-2">
+          <Button size="sm" onClick={() => setUploadOpen(true)}>
+            <IconFileUpload className="size-4" /> Upload documents
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
+            <IconFileUpload className="size-4" /> Import booking PDF
+          </Button>
+        </div>
       </div>
 
       {docs.data.length === 0 ? (
-        <EmptyState icon={<FileLock2 className="size-8" />} title="No documents yet" description="Upload passports, insurance, and confirmations — encrypted before they leave your browser." />
+        <EmptyState
+          icon={<IconVault className="size-8" />}
+          title="No documents yet"
+          description="Upload passports, insurance, and confirmations — encrypted before they leave your browser."
+        />
       ) : (
         <div className="space-y-2">
           {docs.data.map((doc) => (
-            <DocumentRow key={doc.id} doc={doc} vaultKey={key} onDownload={() => handleDownload(doc)} onDelete={() => setDeleting(doc)} />
+            <DocumentRow
+              key={doc.id}
+              doc={doc}
+              vaultKey={key}
+              linkedStayName={
+                doc.linked_entity_type === 'accommodation' && doc.linked_entity_id ? stayNameById.get(doc.linked_entity_id) : undefined
+              }
+              onDownload={() => handleDownload(doc)}
+              onDelete={() => setDeleting(doc)}
+            />
           ))}
         </div>
       )}
 
-      <UploadDialog
-        open={uploadOpen}
-        onOpenChange={setUploadOpen}
-        onUpload={async (file, category, title) => {
-          if (!key || !activeTripId || !user) return
-          await uploadEncryptedDocument({ tripId: activeTripId, ownerId: user.id, vaultKey: key, category, title, file })
-        }}
-      />
+      {key && activeTripId && user && (
+        <BulkUploadDialog
+          open={uploadOpen}
+          onOpenChange={setUploadOpen}
+          vaultKey={key}
+          tripId={activeTripId}
+          ownerId={user.id}
+          stayOptions={stayOptions}
+          onUploaded={() => docs.refresh()}
+        />
+      )}
       <BookingImportDialog
         open={importOpen}
         onOpenChange={setImportOpen}
@@ -262,17 +265,19 @@ function VaultContents() {
               insertedIds.push(data.id)
             }
           }
-          const category = bookings[0]?.kind === 'flight'
-            ? 'flight_confirmation'
-            : bookings[0]?.kind === 'accommodation'
-              ? 'accommodation_confirmation'
-              : 'car_rental_confirmation'
+          const category =
+            bookings[0]?.kind === 'flight'
+              ? 'flight_confirmation'
+              : bookings[0]?.kind === 'accommodation'
+                ? 'accommodation_confirmation'
+                : 'car_rental_confirmation'
           await uploadEncryptedDocument({
             tripId: activeTripId,
             ownerId: user.id,
             vaultKey: key,
             category,
-            linkedEntityType: bookings[0]?.kind === 'flight' ? 'flight' : bookings[0]?.kind === 'accommodation' ? 'accommodation' : 'rental_car',
+            linkedEntityType:
+              bookings[0]?.kind === 'flight' ? 'flight' : bookings[0]?.kind === 'accommodation' ? 'accommodation' : 'rental_car',
             linkedEntityId: insertedIds[0] ?? null,
             title: file.name,
             file,
@@ -341,7 +346,9 @@ function BookingImportDialog({
           <DialogTitle>Import booking PDF</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">The PDF is read in your browser. Review the detected records before they are added to your trip.</p>
+          <p className="text-sm text-muted-foreground">
+            The PDF is read in your browser. Review the detected records before they are added to your trip.
+          </p>
           <Input type="file" accept="application/pdf" onChange={(event) => void selectFile(event.target.files?.[0] ?? null)} />
           {parsing && <p className="text-sm text-muted-foreground">Reading PDF…</p>}
           {error && <p className="text-sm text-destructive">{error}</p>}
@@ -351,12 +358,36 @@ function BookingImportDialog({
                 <Card key={`${booking.kind}-${index}`}>
                   <CardContent className="space-y-1 p-3 text-sm">
                     <p className="font-medium capitalize">{booking.kind.replace('_', ' ')}</p>
-                    {booking.kind === 'flight' && <p>{booking.airline} {booking.flight_number} · {booking.departure_airport} → {booking.arrival_airport}</p>}
-                    {booking.kind === 'flight' && <p className="text-muted-foreground">{booking.departure_at} → {booking.arrival_at}</p>}
-                    {booking.kind === 'accommodation' && <p>{booking.name} · {booking.check_in_date} → {booking.check_out_date}</p>}
-                    {booking.kind === 'accommodation' && <p className="text-muted-foreground">{booking.address} · Confirmation {booking.confirmation_number}</p>}
-                    {booking.kind === 'rental_car' && <p>{booking.rental_company} · {booking.car_model}</p>}
-                    {booking.kind === 'rental_car' && <p className="text-muted-foreground">{booking.pickup_at} → {booking.dropoff_at} · Confirmation {booking.confirmation_number}</p>}
+                    {booking.kind === 'flight' && (
+                      <p>
+                        {booking.airline} {booking.flight_number} · {booking.departure_airport} → {booking.arrival_airport}
+                      </p>
+                    )}
+                    {booking.kind === 'flight' && (
+                      <p className="text-muted-foreground">
+                        {booking.departure_at} → {booking.arrival_at}
+                      </p>
+                    )}
+                    {booking.kind === 'accommodation' && (
+                      <p>
+                        {booking.name} · {booking.check_in_date} → {booking.check_out_date}
+                      </p>
+                    )}
+                    {booking.kind === 'accommodation' && (
+                      <p className="text-muted-foreground">
+                        {booking.address} · Confirmation {booking.confirmation_number}
+                      </p>
+                    )}
+                    {booking.kind === 'rental_car' && (
+                      <p>
+                        {booking.rental_company} · {booking.car_model}
+                      </p>
+                    )}
+                    {booking.kind === 'rental_car' && (
+                      <p className="text-muted-foreground">
+                        {booking.pickup_at} → {booking.dropoff_at} · Confirmation {booking.confirmation_number}
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -364,18 +395,21 @@ function BookingImportDialog({
           )}
         </div>
         <DialogFooter>
-          <Button disabled={!file || bookings.length === 0 || parsing || saving} onClick={async () => {
-            if (!file || bookings.length === 0) return
-            setSaving(true)
-            try {
-              await onImport(file, bookings)
-              onOpenChange(false)
-            } catch (e) {
-              setError(e instanceof Error ? e.message : 'Could not save imported booking.')
-            } finally {
-              setSaving(false)
-            }
-          }}>
+          <Button
+            disabled={!file || bookings.length === 0 || parsing || saving}
+            onClick={async () => {
+              if (!file || bookings.length === 0) return
+              setSaving(true)
+              try {
+                await onImport(file, bookings)
+                onOpenChange(false)
+              } catch (e) {
+                setError(e instanceof Error ? e.message : 'Could not save imported booking.')
+              } finally {
+                setSaving(false)
+              }
+            }}
+          >
             {saving ? 'Importing…' : 'Confirm import'}
           </Button>
         </DialogFooter>
@@ -387,11 +421,13 @@ function BookingImportDialog({
 function DocumentRow({
   doc,
   vaultKey,
+  linkedStayName,
   onDownload,
   onDelete,
 }: {
   doc: Tables<'documents'>
   vaultKey: CryptoKey | null
+  linkedStayName?: string
   onDownload: () => void
   onDelete: () => void
 }) {
@@ -399,109 +435,37 @@ function DocumentRow({
 
   useEffect(() => {
     if (!vaultKey) return
-    decryptJson<DocumentMetadata>(vaultKey, doc.encrypted_metadata, doc.metadata_iv)
-      .then((meta) => setTitle(meta.title))
+    decryptDocumentTitle(vaultKey, doc)
+      .then(setTitle)
       .catch(() => setTitle('(could not decrypt)'))
-  }, [vaultKey, doc.encrypted_metadata, doc.metadata_iv])
+  }, [vaultKey, doc])
 
   return (
     <Card>
       <CardContent className="flex items-center justify-between gap-3 p-3">
         <div className="min-w-0">
           <p className="truncate font-medium">{title}</p>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline" className="text-[10px] capitalize">
               {doc.category.replace(/_/g, ' ')}
             </Badge>
+            {linkedStayName && (
+              <Badge variant="secondary" className="text-[10px]">
+                {linkedStayName}
+              </Badge>
+            )}
             <span className="text-xs text-muted-foreground">{(doc.size_bytes / 1024).toFixed(0)} KB</span>
           </div>
         </div>
         <div className="flex shrink-0 gap-1">
           <Button variant="outline" size="icon" onClick={onDownload} aria-label="Download">
-            <Download className="size-4" />
+            <IconDownload className="size-4" />
           </Button>
           <Button variant="ghost" size="icon" onClick={onDelete} aria-label="Delete">
-            <Trash2 className="size-4" />
+            <IconTrash className="size-4" />
           </Button>
         </div>
       </CardContent>
     </Card>
-  )
-}
-
-function UploadDialog({
-  open,
-  onOpenChange,
-  onUpload,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onUpload: (file: File, category: DocumentCategory, title: string) => Promise<void>
-}) {
-  const [file, setFile] = useState<File | null>(null)
-  const [category, setCategory] = useState<DocumentCategory>('other')
-  const [title, setTitle] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-
-  useEffect(() => {
-    if (!open) {
-      setFile(null)
-      setTitle('')
-      setCategory('other')
-    }
-  }, [open])
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Upload document</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="doc-title">Title</Label>
-            <Input id="doc-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Hemang's passport" />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Category</Label>
-            <Select value={category} onValueChange={(v) => setCategory(v as DocumentCategory)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c.replace(/_/g, ' ')}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="doc-file">File</Label>
-            <Input id="doc-file" type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button
-            disabled={!file || !title.trim() || submitting}
-            onClick={async () => {
-              if (!file) return
-              setSubmitting(true)
-              try {
-                await onUpload(file, category, title.trim())
-                onOpenChange(false)
-              } catch (e) {
-                toast({ title: 'Upload failed', description: e instanceof Error ? e.message : undefined, variant: 'destructive' })
-              } finally {
-                setSubmitting(false)
-              }
-            }}
-          >
-            {submitting ? 'Encrypting & uploading…' : 'Upload'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   )
 }

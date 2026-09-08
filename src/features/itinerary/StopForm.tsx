@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 
+import { LocationLookup } from '@/components/common/location-lookup'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -31,7 +32,9 @@ export function StopForm({
     watch,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<ItineraryStopFormInput, unknown, ItineraryStopFormValues>({ resolver: zodResolver(itineraryStopSchema) })
+  } = useForm<ItineraryStopFormInput, unknown, ItineraryStopFormValues>({
+    resolver: zodResolver(itineraryStopSchema),
+  })
 
   useEffect(() => {
     if (open) {
@@ -69,6 +72,14 @@ export function StopForm({
           <div className="space-y-1.5">
             <Label htmlFor="address">Address</Label>
             <Input id="address" {...register('address')} />
+            <LocationLookup
+              query={watch('address') || watch('name') || ''}
+              onSelect={(result) => {
+                setValue('address', result.address)
+                setValue('lat', result.lat)
+                setValue('lng', result.lng)
+              }}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">

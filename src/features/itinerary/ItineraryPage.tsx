@@ -1,5 +1,5 @@
 import { format } from 'date-fns'
-import { Plus, Printer, Trash2 } from 'lucide-react'
+import { IconBed, IconPlus, IconPrinter, IconTrash } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
@@ -26,7 +26,10 @@ import { StopList } from './StopList'
 
 export function ItineraryPage() {
   const { activeTripId } = useTrip()
-  const days = useRealtimeTable('itinerary_days', 'trip_id', activeTripId, { orderBy: 'sort_order' })
+  const days = useRealtimeTable('itinerary_days', 'trip_id', activeTripId, {
+    orderBy: 'date',
+  })
+  const stays = useRealtimeTable('accommodations', 'trip_id', activeTripId)
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null)
   const [dayFormOpen, setDayFormOpen] = useState(false)
   const [editingDay, setEditingDay] = useState<Tables<'itinerary_days'> | null>(null)
@@ -56,7 +59,6 @@ export function ItineraryPage() {
         const created = await days.insert({
           trip_id: activeTripId!,
           date: values.date,
-          sort_order: days.data.length,
           title: values.title || null,
           overnight_location: values.overnight_location || null,
           overnight_lat: values.overnight_lat ?? null,
@@ -66,7 +68,11 @@ export function ItineraryPage() {
         setSelectedDayId(created.id)
       }
     } catch (e) {
-      toast({ title: 'Could not save day', description: e instanceof Error ? e.message : undefined, variant: 'destructive' })
+      toast({
+        title: 'Could not save day',
+        description: e instanceof Error ? e.message : undefined,
+        variant: 'destructive',
+      })
     }
   }
 
@@ -82,13 +88,12 @@ export function ItineraryPage() {
           <div className="flex gap-2">
             <ItineraryImportButton
               onImport={async (importedDays: ImportedItineraryDay[]) => {
-                for (const [dayIndex, importedDay] of importedDays.entries()) {
+                for (const importedDay of importedDays) {
                   const { data: createdDay, error: dayError } = await supabase
                     .from('itinerary_days')
                     .insert({
                       trip_id: activeTripId!,
                       date: importedDay.date,
-                      sort_order: days.data.length + dayIndex,
                       title: importedDay.title || null,
                       overnight_location: importedDay.overnight_location || null,
                       notes: importedDay.notes || null,
@@ -119,13 +124,17 @@ export function ItineraryPage() {
                 setDayFormOpen(true)
               }}
             >
-              <Plus className="size-4" /> Add day
+              <IconPlus className="size-4" /> Add day
             </Button>
           </div>
         }
       />
 
-      {days.isOffline && <div className="mb-3"><OfflineNotice savedAt={days.staleSince} /></div>}
+      {days.isOffline && (
+        <div className="mb-3">
+          <OfflineNotice savedAt={days.staleSince} />
+        </div>
+      )}
 
       {days.data.length === 0 ? (
         <EmptyState title="No days yet" description="Add your first day to start building the itinerary." />
@@ -150,6 +159,7 @@ export function ItineraryPage() {
           {selectedDay && (
             <DayDetail
               day={selectedDay}
+              linkedStays={stays.data.filter((s) => s.itinerary_day_ids.includes(selectedDay.id))}
               onEditDay={() => {
                 setEditingDay(selectedDay)
                 setDayFormOpen(true)
@@ -182,16 +192,20 @@ export function ItineraryPage() {
 
 function DayDetail({
   day,
+  linkedStays,
   onEditDay,
   onDeleteDay,
   onUpdateDay,
 }: {
   day: Tables<'itinerary_days'>
+  linkedStays: Tables<'accommodations'>[]
   onEditDay: () => void
   onDeleteDay: () => void
   onUpdateDay: (patch: Partial<Tables<'itinerary_days'>>) => Promise<unknown>
 }) {
-  const stops = useRealtimeTable('itinerary_stops', 'day_id', day.id, { orderBy: 'position' })
+  const stops = useRealtimeTable('itinerary_stops', 'day_id', day.id, {
+    orderBy: 'position',
+  })
   const segments = useRealtimeTable('driving_segments', 'day_id', day.id)
   const [stopFormOpen, setStopFormOpen] = useState(false)
   const [editingStop, setEditingStop] = useState<Tables<'itinerary_stops'> | null>(null)
@@ -202,17 +216,42 @@ function DayDetail({
 
   const mapPoints: MapPoint[] = stops.data
     .filter((s) => Number.isFinite(s.lat) && Number.isFinite(s.lng))
-    .map((s, i) => ({ id: s.id, lat: s.lat as number, lng: s.lng as number, label: s.name, order: i + 1 }))
+    .map((s, i) => ({
+      id: s.id,
+      lat: s.lat as number,
+      lng: s.lng as number,
+      label: s.name,
+      order: i + 1,
+    }))
 
   const handleSaveStop = async (values: ItineraryStopFormValues) => {
     try {
+      const payload = {
+        name: values.name,
+        address: values.address || null,
+        lat: values.lat ?? null,
+        lng: values.lng ?? null,
+        planned_arrival: values.planned_arrival || null,
+        planned_departure: values.planned_departure || null,
+        activity_notes: values.activity_notes || null,
+        booking_link: values.booking_link || null,
+        status: values.status,
+      }
       if (editingStop) {
-        await stops.update(editingStop.id, values)
+        await stops.update(editingStop.id, payload)
       } else {
-        await stops.insert({ day_id: day.id, position: stops.data.length, ...values })
+        await stops.insert({
+          day_id: day.id,
+          position: stops.data.length,
+          ...payload,
+        })
       }
     } catch (e) {
-      toast({ title: 'Could not save stop', description: e instanceof Error ? e.message : undefined, variant: 'destructive' })
+      toast({
+        title: 'Could not save stop',
+        description: e instanceof Error ? e.message : undefined,
+        variant: 'destructive',
+      })
     }
   }
 
@@ -229,12 +268,25 @@ function DayDetail({
   ) => {
     try {
       if (existing) {
-        await segments.update(existing.id, { distance_km: distanceKm, duration_minutes: durationMinutes })
+        await segments.update(existing.id, {
+          distance_km: distanceKm,
+          duration_minutes: durationMinutes,
+        })
       } else {
-        await segments.insert({ day_id: day.id, from_stop_id: fromId, to_stop_id: toId, distance_km: distanceKm, duration_minutes: durationMinutes })
+        await segments.insert({
+          day_id: day.id,
+          from_stop_id: fromId,
+          to_stop_id: toId,
+          distance_km: distanceKm,
+          duration_minutes: durationMinutes,
+        })
       }
     } catch (e) {
-      toast({ title: 'Could not save driving segment', description: e instanceof Error ? e.message : undefined, variant: 'destructive' })
+      toast({
+        title: 'Could not save driving segment',
+        description: e instanceof Error ? e.message : undefined,
+        variant: 'destructive',
+      })
     }
   }
 
@@ -243,18 +295,27 @@ function DayDetail({
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2 print:hidden">
           <div>
-            <h2 className="text-lg font-semibold">{day.title || 'Untitled day'}</h2>
-            <p className="text-sm text-muted-foreground">{day.overnight_location ? `Overnight: ${day.overnight_location}` : 'No overnight location set'}</p>
+            <h2 className="flex items-center gap-1.5 text-lg font-semibold">
+              {day.title || 'Untitled day'}
+              {linkedStays.length > 0 && (
+                <span title={`Staying at ${linkedStays[0].name}`} className="text-[var(--color-secondary)]">
+                  <IconBed className="size-4" />
+                </span>
+              )}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {day.overnight_location ? `Overnight: ${day.overnight_location}` : 'No overnight location set'}
+            </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => window.print()}>
-              <Printer className="size-4" /> Print
+              <IconPrinter className="size-4" /> Print
             </Button>
             <Button variant="outline" size="sm" onClick={onEditDay}>
               Edit day
             </Button>
             <Button variant="ghost" size="icon" onClick={onDeleteDay} aria-label="Delete day">
-              <Trash2 className="size-4" />
+              <IconTrash className="size-4" />
             </Button>
           </div>
         </div>
@@ -272,7 +333,7 @@ function DayDetail({
               setStopFormOpen(true)
             }}
           >
-            <Plus className="size-4" /> Add stop
+            <IconPlus className="size-4" /> Add stop
           </Button>
         </div>
 

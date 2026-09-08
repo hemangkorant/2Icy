@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Fuel, Plus, Trash2 } from 'lucide-react'
+import { IconGasStation, IconPlus, IconTrash } from '@tabler/icons-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -96,12 +96,16 @@ export function FuelSection() {
             setFormOpen(true)
           }}
         >
-          <Plus className="size-4" /> Log fuel stop
+          <IconPlus className="size-4" /> Log fuel stop
         </Button>
       </div>
 
       {entries.data.length === 0 ? (
-        <EmptyState icon={<Fuel className="size-8" />} title="No fuel entries yet" description="Log fill-ups to track spend across the trip." />
+        <EmptyState
+          icon={<IconGasStation className="size-8" />}
+          title="No fuel entries yet"
+          description="Log fill-ups to track spend across the trip."
+        />
       ) : (
         <div className="space-y-2">
           {entries.data.map((entry) => (
@@ -115,17 +119,29 @@ export function FuelSection() {
                     {entry.odometer ? ` · ${entry.odometer} km odo` : ''}
                   </p>
                   {entry.station_name && (
-                    <a href={googleMapsSearchUrl(entry.station_name)} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">
+                    <a
+                      href={googleMapsSearchUrl(entry.station_name)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-link hover:underline"
+                    >
                       Open in Maps
                     </a>
                   )}
                 </div>
                 <div className="flex shrink-0 gap-1">
-                  <Button variant="outline" size="sm" onClick={() => { setEditing(entry); setFormOpen(true) }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setEditing(entry)
+                      setFormOpen(true)
+                    }}
+                  >
                     Edit
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => setDeleting(entry)} aria-label="Delete">
-                    <Trash2 className="size-4" />
+                    <IconTrash className="size-4" />
                   </Button>
                 </div>
               </CardContent>
@@ -234,7 +250,7 @@ function FuelForm({
 
 export function SuggestedFuelStops() {
   const { activeTripId } = useTrip()
-  const days = useRealtimeTable('itinerary_days', 'trip_id', activeTripId, { orderBy: 'sort_order' })
+  const days = useRealtimeTable('itinerary_days', 'trip_id', activeTripId, { orderBy: 'date' })
   const [selectedDay, setSelectedDay] = useState<string>('')
   const stops = useRealtimeTable('suggested_fuel_stops', 'day_id', selectedDay || null)
   const [name, setName] = useState('')
@@ -269,7 +285,7 @@ export function SuggestedFuelStops() {
                 <div key={s.id} className="flex items-center justify-between rounded-md border border-border px-2.5 py-1.5 text-sm">
                   <span>{s.name}</span>
                   <Button variant="ghost" size="icon" className="size-7" onClick={() => stops.remove(s.id)} aria-label="Remove">
-                    <Trash2 className="size-3.5" />
+                    <IconTrash className="size-3.5" />
                   </Button>
                 </div>
               ))}
@@ -286,7 +302,7 @@ export function SuggestedFuelStops() {
                   setName('')
                 }}
               >
-                <Plus className="size-3.5" />
+                <IconPlus className="size-3.5" />
               </Button>
             </div>
           </>

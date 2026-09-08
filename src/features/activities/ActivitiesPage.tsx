@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ExternalLink, Plus, Ticket, Trash2 } from 'lucide-react'
+import { IconExternalLink, IconPlus, IconTicket, IconTrash } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -76,13 +76,13 @@ export function ActivitiesPage() {
         description="Booked tours and experiences."
         action={
           <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true) }}>
-            <Plus className="size-4" /> Add activity
+            <IconPlus className="size-4" /> Add activity
           </Button>
         }
       />
       {activities.isOffline && <div className="mb-3"><OfflineNotice savedAt={activities.staleSince} /></div>}
       {activities.data.length === 0 ? (
-        <EmptyState icon={<Ticket className="size-8" />} title="No activities yet" description="Add booked tours to track times and cancellation policies." />
+        <EmptyState icon={<IconTicket className="size-8" />} title="No activities yet" description="Add booked tours to track times and cancellation policies." />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {activities.data.map((activity) => (
@@ -93,7 +93,7 @@ export function ActivitiesPage() {
                   <div className="flex items-center gap-1">
                     <Badge variant={REMINDER_VARIANT[activity.reminder_status]}>{activity.reminder_status.replace('_', ' ')}</Badge>
                     <Button variant="ghost" size="icon" onClick={() => setDeleting(activity)} aria-label="Delete">
-                      <Trash2 className="size-4" />
+                      <IconTrash className="size-4" />
                     </Button>
                   </div>
                 </div>
@@ -107,7 +107,7 @@ export function ActivitiesPage() {
                 {activity.meeting_point && (
                   <p>
                     <span className="text-muted-foreground">Meet:</span> {activity.meeting_point}{' '}
-                    <a href={googleMapsSearchUrl(activity.meeting_point)} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                    <a href={googleMapsSearchUrl(activity.meeting_point)} target="_blank" rel="noreferrer" className="text-link hover:underline">
                       (Map)
                     </a>
                   </p>
@@ -133,8 +133,8 @@ export function ActivitiesPage() {
                   </p>
                 )}
                 {activity.booking_link && (
-                  <a href={activity.booking_link} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-primary hover:underline">
-                    <ExternalLink className="size-3" /> Booking link
+                  <a href={activity.booking_link} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-link hover:underline">
+                    <IconExternalLink className="size-3" /> Booking link
                   </a>
                 )}
                 <Button variant="outline" size="sm" className="mt-2 w-full" onClick={() => { setEditing(activity); setFormOpen(true) }}>

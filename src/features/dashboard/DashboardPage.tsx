@@ -1,4 +1,5 @@
-import { Backpack, Banknote, CheckSquare, CloudSun, Plane } from 'lucide-react'
+import { IconBackpack, IconCalendar, IconCashBanknote, IconCloudStorm, IconPlane, IconSquareCheck } from '@tabler/icons-react'
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
 import { LoadingState } from '@/components/common/states'
@@ -11,7 +12,7 @@ import { formatFriendlyDate, formatFriendlyDateTime, relativeToNow, todayIceland
 
 export function DashboardPage() {
   const { activeTrip, activeTripId } = useTrip()
-  const days = useRealtimeTable('itinerary_days', 'trip_id', activeTripId, { orderBy: 'sort_order' })
+  const days = useRealtimeTable('itinerary_days', 'trip_id', activeTripId, { orderBy: 'date' })
   const flights = useRealtimeTable('flights', 'trip_id', activeTripId, { orderBy: 'departure_at' })
   const tasks = useRealtimeTable('tasks', 'trip_id', activeTripId)
   const packing = useRealtimeTable('packing_items', 'trip_id', activeTripId)
@@ -40,11 +41,14 @@ export function DashboardPage() {
 
       {upcomingFlight && (
         <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <Plane className="size-8 text-primary" />
+          <CardContent className="flex items-center gap-4 p-5">
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
+              <IconPlane className="size-6" />
+            </span>
             <div>
               <p className="font-medium">
-                {upcomingFlight.airline} {upcomingFlight.flight_number}: {upcomingFlight.departure_airport} → {upcomingFlight.arrival_airport}
+                {upcomingFlight.airline} {upcomingFlight.flight_number}: {upcomingFlight.departure_airport} →{' '}
+                {upcomingFlight.arrival_airport}
               </p>
               <p className="text-sm text-muted-foreground">
                 Departs {formatFriendlyDateTime(upcomingFlight.departure_at)} · {relativeToNow(upcomingFlight.departure_at)}
@@ -55,75 +59,76 @@ export function DashboardPage() {
       )}
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Link to="/itinerary">
-          <Card className="h-full transition-colors hover:border-primary">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">{todayDay ? "Today's plan" : 'Next day'}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {todayDay || nextDay ? (
-                <>
-                  <p className="font-medium">{(todayDay ?? nextDay)?.title || (todayDay ?? nextDay)?.overnight_location || 'Untitled'}</p>
-                  <p className="text-xs text-muted-foreground">{formatFriendlyDate((todayDay ?? nextDay)?.date)}</p>
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground">No itinerary days yet.</p>
-              )}
-            </CardContent>
-          </Card>
-        </Link>
+        <StatCard
+          to="/itinerary"
+          icon={
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
+              <IconCalendar className="size-4" />
+            </span>
+          }
+          title={todayDay ? "Today's plan" : 'Next day'}
+        >
+          {todayDay || nextDay ? (
+            <>
+              <p className="font-medium">{(todayDay ?? nextDay)?.title || (todayDay ?? nextDay)?.overnight_location || 'Untitled'}</p>
+              <p className="text-xs text-muted-foreground">{formatFriendlyDate((todayDay ?? nextDay)?.date)}</p>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">No itinerary days yet.</p>
+          )}
+        </StatCard>
 
-        <Link to="/safety">
-          <Card className="h-full transition-colors hover:border-primary">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <CloudSun className="size-4" /> Safety & weather
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Check today's weather & road status before driving.</p>
-            </CardContent>
-          </Card>
-        </Link>
+        <StatCard
+          to="/safety"
+          icon={
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-secondary-tint)] text-[var(--color-secondary)]">
+              <IconCloudStorm className="size-4" />
+            </span>
+          }
+          title="Safety & weather"
+        >
+          <p className="text-sm text-muted-foreground">Check today's weather & road status before driving.</p>
+        </StatCard>
 
-        <Link to="/tasks">
-          <Card className="h-full transition-colors hover:border-primary">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <CheckSquare className="size-4" /> Pre-trip tasks
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="font-medium">{openTasks.length} open</p>
-              <Badge variant={openTasks.length === 0 ? 'success' : 'secondary'} className="mt-1">
-                {tasks.data.length - openTasks.length}/{tasks.data.length} done
-              </Badge>
-            </CardContent>
-          </Card>
-        </Link>
+        <StatCard
+          to="/tasks"
+          icon={
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
+              <IconSquareCheck className="size-4" />
+            </span>
+          }
+          title="Pre-trip tasks"
+        >
+          <p className="font-medium">{openTasks.length} open</p>
+          <Badge variant={openTasks.length === 0 ? 'success' : 'secondary'} className="mt-1">
+            {tasks.data.length - openTasks.length}/{tasks.data.length} done
+          </Badge>
+        </StatCard>
 
-        <Link to="/packing">
-          <Card className="h-full transition-colors hover:border-primary">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <Backpack className="size-4" /> Packing
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Progress value={packingPct} />
-              <p className="mt-1 text-xs text-muted-foreground">
-                {packedCount}/{packing.data.length} packed
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
+        <StatCard
+          to="/packing"
+          icon={
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-success-tint)] text-[var(--color-success)]">
+              <IconBackpack className="size-4" />
+            </span>
+          }
+          title="Packing"
+        >
+          <Progress value={packingPct} />
+          <p className="mt-1 text-xs text-muted-foreground">
+            {packedCount}/{packing.data.length} packed
+          </p>
+        </StatCard>
       </div>
 
       <Link to="/expenses">
         <Card className="transition-colors hover:border-primary">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
-              <Banknote className="size-4" /> Spend so far
+              <span className="flex size-8 items-center justify-center rounded-full bg-accent text-accent-foreground">
+                <IconCashBanknote className="size-4" />
+              </span>
+              Spend so far
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -133,5 +138,19 @@ export function DashboardPage() {
         </Card>
       </Link>
     </div>
+  )
+}
+
+function StatCard({ to, icon, title, children }: { to: string; icon: ReactNode; title: string; children: ReactNode }) {
+  return (
+    <Link to={to}>
+      <Card className="h-full transition-colors hover:border-primary">
+        <CardHeader className="flex-row items-center gap-2 space-y-0 pb-2">
+          {icon}
+          <CardTitle className="text-sm">{title}</CardTitle>
+        </CardHeader>
+        <CardContent>{children}</CardContent>
+      </Card>
+    </Link>
   )
 }

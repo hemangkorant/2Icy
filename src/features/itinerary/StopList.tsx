@@ -1,7 +1,7 @@
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ExternalLink, GripVertical, MapPin, Pencil, Trash2 } from 'lucide-react'
+import { IconExternalLink, IconGripVertical, IconMapPin, IconPencil, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
@@ -92,7 +92,7 @@ function SortableStop({
           {...listeners}
           aria-label="Drag to reorder"
         >
-          <GripVertical className="size-4" />
+          <IconGripVertical className="size-4" />
         </button>
         <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
           {index + 1}
@@ -116,23 +116,23 @@ function SortableStop({
               href={googleMapsSearchUrl(stop.address || stop.name)}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1 text-primary hover:underline"
+              className="flex items-center gap-1 text-link hover:underline"
             >
-              <MapPin className="size-3" /> Open in Maps
+              <IconMapPin className="size-3" /> Open in Maps
             </a>
             {stop.booking_link && (
-              <a href={stop.booking_link} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-primary hover:underline">
-                <ExternalLink className="size-3" /> Booking
+              <a href={stop.booking_link} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-link hover:underline">
+                <IconExternalLink className="size-3" /> Booking
               </a>
             )}
           </div>
         </div>
         <div className="flex shrink-0 gap-1">
           <Button variant="ghost" size="icon" onClick={() => onEdit(stop)} aria-label="Edit stop">
-            <Pencil className="size-4" />
+            <IconPencil className="size-4" />
           </Button>
           <Button variant="ghost" size="icon" onClick={() => onDelete(stop)} aria-label="Delete stop">
-            <Trash2 className="size-4" />
+            <IconTrash className="size-4" />
           </Button>
         </div>
       </CardContent>
@@ -183,9 +183,9 @@ function DrivingSegmentRow({
           )}
           target="_blank"
           rel="noreferrer"
-          className="flex items-center gap-1 text-primary hover:underline"
+          className="flex items-center gap-1 text-link hover:underline"
         >
-          <ExternalLink className="size-3" /> Route in Google Maps
+          <IconExternalLink className="size-3" /> Route in Google Maps
         </a>
       )}
     </div>

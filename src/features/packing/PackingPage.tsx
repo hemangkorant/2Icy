@@ -1,4 +1,4 @@
-import { Backpack, Plus, Sparkles, Trash2 } from 'lucide-react'
+import { IconBackpack, IconPlus, IconSparkles, IconTrash } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 
 import { PageHeader } from '@/components/common/page-header'
@@ -15,7 +15,7 @@ import { toast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
 import type { PackingGroup, PackingPriority } from '@/types/database'
 
-import { DEFAULT_PACKING_ITEMS, PACKING_GROUP_LABELS } from './packing-defaults'
+import { DEFAULT_PACKING_ITEMS, PACKING_GROUP_ICONS, PACKING_GROUP_LABELS } from './packing-defaults'
 
 const PRIORITY_VARIANT: Record<PackingPriority, 'destructive' | 'default' | 'secondary'> = {
   essential: 'destructive',
@@ -69,7 +69,7 @@ export function PackingPage() {
         description="Shoulder-season Iceland packing list."
         action={
           <Button size="sm" variant="outline" onClick={seedDefaults}>
-            <Sparkles className="size-4" /> Add suggested items
+            <IconSparkles className="size-4" /> Add suggested items
           </Button>
         }
       />
@@ -84,14 +84,20 @@ export function PackingPage() {
       )}
 
       {items.data.length === 0 ? (
-        <EmptyState icon={<Backpack className="size-8" />} title="Nothing on the list yet" description='Click "Add suggested items" to start from a shoulder-season Iceland checklist.' />
+        <EmptyState icon={<IconBackpack className="size-8" />} title="Nothing on the list yet" description='Click "Add suggested items" to start from a shoulder-season Iceland checklist.' />
       ) : (
         <div className="space-y-5">
           {groups.map((group) => {
             const groupItems = items.data.filter((i) => i.group_name === group)
+            const GroupIcon = PACKING_GROUP_ICONS[group]
             return (
               <div key={group}>
-                <h3 className="mb-2 text-sm font-semibold">{PACKING_GROUP_LABELS[group]}</h3>
+                <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+                  <span className="flex size-6 items-center justify-center rounded-full bg-accent text-accent-foreground">
+                    <GroupIcon className="size-3.5" />
+                  </span>
+                  {PACKING_GROUP_LABELS[group]}
+                </h3>
                 <div className="space-y-1.5">
                   {groupItems.map((item) => (
                     <div key={item.id} className="flex flex-wrap items-center gap-2 rounded-md border border-border px-2.5 py-2">
@@ -123,7 +129,7 @@ export function PackingPage() {
                         </SelectContent>
                       </Select>
                       <Button variant="ghost" size="icon" className="size-7" onClick={() => items.remove(item.id)} aria-label="Remove">
-                        <Trash2 className="size-3.5" />
+                        <IconTrash className="size-3.5" />
                       </Button>
                     </div>
                   ))}
@@ -150,7 +156,7 @@ export function PackingPage() {
                       setNewItem((prev) => ({ ...prev, [group]: '' }))
                     }}
                   >
-                    <Plus className="size-3.5" />
+                    <IconPlus className="size-3.5" />
                   </Button>
                 </div>
               </div>

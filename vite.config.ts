@@ -14,9 +14,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Iceland Trip Tracker',
-        short_name: 'Iceland Trip',
-        description: 'Shared itinerary and trip-management companion for an Iceland road trip.',
+        name: 'Roamio',
+        short_name: 'Roamio',
+        description: 'A shared trip planner and on-the-ground tracker for any destination.',
         theme_color: '#0f172a',
         background_color: '#f8fafc',
         display: 'standalone',

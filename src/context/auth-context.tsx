@@ -1,5 +1,5 @@
 import type { Session, User } from '@supabase/supabase-js'
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import { supabase } from '@/lib/supabase'
 import type { Tables } from '@/types/database'
@@ -13,6 +13,7 @@ interface AuthContextValue {
   signInWithPassword: (email: string, password: string) => Promise<{ error: string | null }>
   signUpWithPassword: (email: string, password: string) => Promise<{ error: string | null; needsConfirmation: boolean }>
   signOut: () => Promise<void>
+  refreshProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -34,6 +35,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     return () => subscription.subscription.unsubscribe()
+  }, [])
+
+  const loadProfile = useCallback(async (userId: string) => {
+    const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+    setProfile(data)
   }, [])
 
   useEffect(() => {
@@ -69,18 +75,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: error?.message ?? null }
       },
       async signInWithPassword(email: string, password: string) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
         return { error: error?.message ?? null }
       },
       async signUpWithPassword(email: string, password: string) {
         const { data, error } = await supabase.auth.signUp({ email, password })
-        return { error: error?.message ?? null, needsConfirmation: Boolean(data.user && !data.session) }
+        return {
+          error: error?.message ?? null,
+          needsConfirmation: Boolean(data.user && !data.session),
+        }
       },
       async signOut() {
         await supabase.auth.signOut()
       },
+      async refreshProfile() {
+        if (session?.user) await loadProfile(session.user.id)
+      },
     }),
-    [session, profile, loading],
+    [session, profile, loading, loadProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

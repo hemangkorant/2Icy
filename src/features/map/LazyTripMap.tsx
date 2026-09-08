@@ -1,8 +1,8 @@
 import { lazy, Suspense } from 'react'
 
-import type { MapPoint } from './TripMap'
+import type { MapPoint, MapRoute } from './TripMap'
 
-export type { MapPoint }
+export type { MapPoint, MapRoute }
 
 // maplibre-gl is a large dependency (~500KB) only needed on the two screens
 // that render a map. Splitting it into its own chunk keeps it out of the
@@ -10,7 +10,13 @@ export type { MapPoint }
 // connectivity this app is built for.
 const RealTripMap = lazy(() => import('./TripMap').then((m) => ({ default: m.TripMap })))
 
-export function LazyTripMap(props: { points: MapPoint[]; height?: number; drawLine?: boolean; onMarkerClick?: (point: MapPoint) => void }) {
+export function LazyTripMap(props: {
+  points?: MapPoint[]
+  routes?: MapRoute[]
+  height?: number
+  drawLine?: boolean
+  onMarkerClick?: (point: MapPoint) => void
+}) {
   return (
     <Suspense
       fallback={

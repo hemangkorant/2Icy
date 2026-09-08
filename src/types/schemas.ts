@@ -46,14 +46,17 @@ export const accommodationSchema = z.object({
   lat: optionalNumber,
   lng: optionalNumber,
   confirmation_number: optionalText,
-  contact_name: optionalText,
   contact_phone: optionalText,
-  contact_email: z.union([z.string().email(), z.literal('')]).optional(),
   website: optionalText,
   booking_source: optionalText,
-  parking_notes: optionalText,
-  cancellation_policy: optionalText,
   notes: optionalText,
+  itinerary_day_ids: z.array(z.string()).default([]),
+  town: optionalText,
+  bathroom_type: z.enum(['private', 'shared']).optional(),
+  cooking_facility: z.enum(['kitchen', 'shared_kitchen', 'pantry', 'none']).optional(),
+  has_parking: z.boolean().optional(),
+  breakfast_included: z.boolean().optional(),
+  cancellation_deadline: optionalText,
 })
 export type AccommodationFormValues = z.infer<typeof accommodationSchema>
 export type AccommodationFormInput = z.input<typeof accommodationSchema>
@@ -233,6 +236,14 @@ export const loginSchema = z.object({
   password: z.string().optional(),
 })
 export type LoginFormValues = z.infer<typeof loginSchema>
+
+export const profileSchema = z.object({
+  first_name: optionalText,
+  last_name: optionalText,
+  gender: z.enum(['female', 'male', 'other', 'prefer_not_to_say']).optional(),
+})
+export type ProfileFormValues = z.infer<typeof profileSchema>
+export type ProfileFormInput = z.input<typeof profileSchema>
 
 export const tripSchema = z.object({
   name: z.string().min(1, 'Trip name is required'),

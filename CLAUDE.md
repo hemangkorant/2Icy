@@ -1,6 +1,6 @@
-# 2Icy — Iceland Trip Tracker
+# Roamio
 
-A shared trip-planning and on-the-ground tracker for Hemang and his wife's Iceland road trip.
+A shared trip-planning and on-the-ground tracker, built as a generic platform reusable for any destination. This instance currently tracks Hemang and his wife's Iceland road trip.
 
 ## Trip context
 

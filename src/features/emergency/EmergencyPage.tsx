@@ -1,5 +1,19 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { AlertTriangle, Phone, Plus, Sparkles, Trash2 } from 'lucide-react'
+import {
+  IconAlertTriangle,
+  IconAmbulance,
+  IconBuildingBank,
+  IconCar,
+  IconFirstAidKit,
+  IconInfoCircle,
+  IconPhone,
+  IconPlus,
+  IconShieldCheck,
+  IconSparkles,
+  IconTrash,
+  IconUsers,
+  type TablerIcon,
+} from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -32,6 +46,15 @@ const CATEGORY_LABELS: Record<EmergencyCategory, string> = {
   roadside_assistance: 'Roadside assistance',
   family: 'Family',
   other: 'Other',
+}
+const CATEGORY_ICONS: Record<EmergencyCategory, TablerIcon> = {
+  emergency_services: IconAmbulance,
+  health: IconFirstAidKit,
+  embassy: IconBuildingBank,
+  insurance: IconShieldCheck,
+  roadside_assistance: IconCar,
+  family: IconUsers,
+  other: IconInfoCircle,
 }
 
 export function EmergencyPage() {
@@ -80,10 +103,10 @@ export function EmergencyPage() {
         action={
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={seedDefaults}>
-              <Sparkles className="size-4" /> Add defaults
+              <IconSparkles className="size-4" /> Add defaults
             </Button>
             <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true) }}>
-              <Plus className="size-4" /> Add contact
+              <IconPlus className="size-4" /> Add contact
             </Button>
           </div>
         }
@@ -93,17 +116,24 @@ export function EmergencyPage() {
         <EmptyState title="No emergency contacts yet" description='Click "Add defaults" to start with Iceland 112 and standard entries.' />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
-          {contacts.data.map((contact) => (
+          {contacts.data.map((contact) => {
+            const CategoryIcon = CATEGORY_ICONS[contact.category]
+            return (
             <Card key={contact.id}>
-              <CardContent className="space-y-1.5 p-3 text-sm">
+              <CardContent className="space-y-1.5 p-4 text-sm">
                 <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="font-medium">{contact.name}</p>
-                    <div className="flex items-center gap-1.5">
-                      <Badge variant="outline" className="text-[10px]">
-                        {CATEGORY_LABELS[contact.category]}
-                      </Badge>
-                      {contact.country && <span className="text-xs text-muted-foreground">{contact.country}</span>}
+                  <div className="flex items-start gap-3">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
+                      <CategoryIcon className="size-4.5" />
+                    </span>
+                    <div>
+                      <p className="font-medium">{contact.name}</p>
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant="outline" className="text-[10px]">
+                          {CATEGORY_LABELS[contact.category]}
+                        </Badge>
+                        {contact.country && <span className="text-xs text-muted-foreground">{contact.country}</span>}
+                      </div>
                     </div>
                   </div>
                   <div className="flex gap-1">
@@ -111,25 +141,26 @@ export function EmergencyPage() {
                       Edit
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => setDeleting(contact)} aria-label="Delete">
-                      <Trash2 className="size-4" />
+                      <IconTrash className="size-4" />
                     </Button>
                   </div>
                 </div>
                 {contact.needs_verification && (
                   <p className="flex items-start gap-1.5 rounded-md bg-warning/10 p-2 text-xs text-warning-foreground">
-                    <AlertTriangle className="mt-0.5 size-3.5 shrink-0" /> Verify before travel — details may be outdated.
+                    <IconAlertTriangle className="mt-0.5 size-3.5 shrink-0" /> Verify before travel — details may be outdated.
                   </p>
                 )}
                 {contact.phone && (
-                  <a href={`tel:${contact.phone}`} className="flex items-center gap-1.5 text-primary hover:underline">
-                    <Phone className="size-3.5" /> {contact.phone}
+                  <a href={`tel:${contact.phone}`} className="flex items-center gap-1.5 text-link hover:underline">
+                    <IconPhone className="size-3.5" /> {contact.phone}
                   </a>
                 )}
                 {contact.address && <p className="text-xs text-muted-foreground">{contact.address}</p>}
                 {contact.notes && <p className="text-xs text-muted-foreground">{contact.notes}</p>}
               </CardContent>
             </Card>
-          ))}
+            )
+          })}
         </div>
       )}
 

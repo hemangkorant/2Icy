@@ -1,4 +1,4 @@
-import { CheckCircle2, Circle } from 'lucide-react'
+import { IconCircle, IconCircleCheckFilled } from '@tabler/icons-react'
 import { Link } from 'react-router-dom'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -30,14 +30,14 @@ export function DayReadiness({ day, stopsCount }: { day: Tables<'itinerary_days'
           <div key={item.label} className="flex items-center justify-between text-sm">
             <span className="flex items-center gap-2">
               {item.done ? (
-                <CheckCircle2 className="size-4 text-success" />
+                <IconCircleCheckFilled className="size-4 text-success" />
               ) : (
-                <Circle className="size-4 text-muted-foreground" />
+                <IconCircle className="size-4 text-muted-foreground" />
               )}
               {item.label}
             </span>
             {!item.done && item.link && (
-              <Link to={item.link} className="text-xs text-primary underline-offset-2 hover:underline">
+              <Link to={item.link} className="text-xs text-link underline-offset-2 hover:underline">
                 Review
               </Link>
             )}

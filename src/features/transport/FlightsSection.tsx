@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Plane, Plus, Trash2 } from 'lucide-react'
+import { IconPlane, IconPlus, IconTrash } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -85,13 +85,13 @@ export function FlightsSection() {
             setFormOpen(true)
           }}
         >
-          <Plus className="size-4" /> Add flight
+          <IconPlus className="size-4" /> Add flight
         </Button>
         </div>
       </div>
 
       {flights.data.length === 0 ? (
-        <EmptyState icon={<Plane className="size-8" />} title="No flights yet" description="Add your flight details to see countdowns on the dashboard." />
+        <EmptyState icon={<IconPlane className="size-8" />} title="No flights yet" description="Add your flight details to see countdowns on the dashboard." />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {flights.data.map((flight) => (
@@ -104,7 +104,7 @@ export function FlightsSection() {
                   <div className="flex items-center gap-1">
                     <Badge variant={STATUS_VARIANT[flight.status] ?? 'secondary'}>{flight.status}</Badge>
                     <Button variant="ghost" size="icon" onClick={() => setDeleting(flight)} aria-label="Delete">
-                      <Trash2 className="size-4" />
+                      <IconTrash className="size-4" />
                     </Button>
                   </div>
                 </div>

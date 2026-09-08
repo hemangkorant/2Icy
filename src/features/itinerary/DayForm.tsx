@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 
+import { LocationLookup } from '@/components/common/location-lookup'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -25,8 +26,12 @@ export function DayForm({
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
-  } = useForm<ItineraryDayFormInput, unknown, ItineraryDayFormValues>({ resolver: zodResolver(itineraryDaySchema) })
+  } = useForm<ItineraryDayFormInput, unknown, ItineraryDayFormValues>({
+    resolver: zodResolver(itineraryDaySchema),
+  })
 
   useEffect(() => {
     if (open) {
@@ -67,6 +72,14 @@ export function DayForm({
           <div className="space-y-1.5">
             <Label htmlFor="overnight_location">Overnight location</Label>
             <Input id="overnight_location" placeholder="e.g. Vik" {...register('overnight_location')} />
+            <LocationLookup
+              query={watch('overnight_location') ?? ''}
+              onSelect={(result) => {
+                setValue('overnight_location', result.label)
+                setValue('overnight_lat', result.lat)
+                setValue('overnight_lng', result.lng)
+              }}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">

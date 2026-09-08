@@ -1,3 +1,16 @@
+import {
+  IconBath,
+  IconCar,
+  IconDeviceLaptop,
+  IconInfoCircle,
+  IconJacket,
+  IconShirt,
+  IconShoe,
+  IconSnowflake,
+  IconWallet,
+  type TablerIcon,
+} from '@tabler/icons-react'
+
 import type { PackingGroup, PackingPriority } from '@/types/database'
 
 export const PACKING_GROUP_LABELS: Record<PackingGroup, string> = {
@@ -10,6 +23,18 @@ export const PACKING_GROUP_LABELS: Record<PackingGroup, string> = {
   documents_money: 'Documents / money',
   aurora_outdoor: 'Aurora / outdoor items',
   other: 'Other',
+}
+
+export const PACKING_GROUP_ICONS: Record<PackingGroup, TablerIcon> = {
+  outerwear: IconJacket,
+  warm_layers: IconShirt,
+  footwear: IconShoe,
+  car_essentials: IconCar,
+  electronics: IconDeviceLaptop,
+  health_toiletries: IconBath,
+  documents_money: IconWallet,
+  aurora_outdoor: IconSnowflake,
+  other: IconInfoCircle,
 }
 
 export const DEFAULT_PACKING_ITEMS: { group_name: PackingGroup; name: string; priority: PackingPriority; quantity: number }[] = [

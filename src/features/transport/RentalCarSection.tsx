@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Car, Plus, Trash2 } from 'lucide-react'
+import { IconCar, IconPlus, IconTrash } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -100,13 +100,13 @@ export function RentalCarSection() {
             setFormOpen(true)
           }}
         >
-          <Plus className="size-4" /> Add rental car
+          <IconPlus className="size-4" /> Add rental car
         </Button>
         </div>
       </div>
 
       {cars.data.length === 0 ? (
-        <EmptyState icon={<Car className="size-8" />} title="No rental car yet" description="Add your rental to get pickup/return checklists." />
+        <EmptyState icon={<IconCar className="size-8" />} title="No rental car yet" description="Add your rental to get pickup/return checklists." />
       ) : (
         cars.data.map((car) => (
           <Card key={car.id}>
@@ -120,7 +120,7 @@ export function RentalCarSection() {
                     Edit
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => setDeleting(car)} aria-label="Delete">
-                    <Trash2 className="size-4" />
+                    <IconTrash className="size-4" />
                   </Button>
                 </div>
               </div>

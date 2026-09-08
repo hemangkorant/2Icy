@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Mountain } from 'lucide-react'
+import { IconMountain } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -43,9 +43,9 @@ export function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="items-center text-center">
           <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Mountain className="size-6" />
+            <IconMountain className="size-6" />
           </div>
-          <CardTitle>Iceland Trip Tracker</CardTitle>
+          <CardTitle>Roamio</CardTitle>
           <CardDescription>{mode === 'password' ? 'Sign in with your email and password.' : 'Sign in with a one-time email link.'}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -71,10 +71,10 @@ export function LoginPage() {
                 {isSubmitting ? 'Please wait…' : mode === 'magic' ? 'Send magic link' : registerMode ? 'Create account' : 'Sign in'}
               </Button>
               <div className="flex justify-between gap-2 text-xs">
-                <button type="button" className="text-primary hover:underline" onClick={() => { setMode(mode === 'password' ? 'magic' : 'password'); setError(null) }}>
+                <button type="button" className="text-link hover:underline" onClick={() => { setMode(mode === 'password' ? 'magic' : 'password'); setError(null) }}>
                   {mode === 'password' ? 'Use magic link instead' : 'Use password instead'}
                 </button>
-                {mode === 'password' && <button type="button" className="text-primary hover:underline" onClick={() => { setRegisterMode(!registerMode); setError(null) }}>
+                {mode === 'password' && <button type="button" className="text-link hover:underline" onClick={() => { setRegisterMode(!registerMode); setError(null) }}>
                   {registerMode ? 'I already have an account' : 'Create an account'}
                 </button>}
               </div>

@@ -1,42 +1,64 @@
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap');
 @import 'tailwindcss';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --color-bg: #f3f2f2;
-  --color-surface: #eae9e9;
-  --color-text: #201e1d;
-  --color-accent: #ec3013;
-  --color-accent-700: #ae1800;
-  --color-divider: color-mix(in srgb, #201e1d 40%, transparent);
-  --shadow-sm: 0 1px 2px color-mix(in srgb, #2d2b2b 14%, transparent);
-  --shadow-md: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent);
-  --shadow-lg: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
+  --color-bg: #faf8f6;
+  --color-surface: #ffffff;
+  --color-text: #221912;
+
+  /* Primary: warm coral/orange used for main actions and brand accents. */
+  --color-primary: #f5694a;
+  --color-primary-600: #e6532f;
+  --color-primary-700: #cc4223;
+  --color-primary-tint: #fdece5;
+  --color-primary-tint-strong: #fbd8c9;
+
+  /* Secondary: teal-blue used for links and secondary accents. */
+  --color-secondary: #276987;
+  --color-secondary-600: #1f5570;
+  --color-secondary-tint: #e6eff2;
+
+  --color-success: #2f8a5b;
+  --color-success-tint: #e3f3ea;
+  --color-warning: #b8791a;
+  --color-warning-tint: #fbf0dc;
+  --color-warning-ink: #6b4a0f;
+  --color-destructive: #c8362a;
+  --color-destructive-tint: #fbe6e3;
+
+  --color-divider: color-mix(in srgb, var(--color-text) 11%, transparent);
+
+  --shadow-sm: 0 1px 2px color-mix(in srgb, var(--color-text) 6%, transparent), 0 1px 1px color-mix(in srgb, var(--color-text) 4%, transparent);
+  --shadow-md: 0 6px 16px color-mix(in srgb, var(--color-text) 9%, transparent), 0 2px 6px color-mix(in srgb, var(--color-text) 6%, transparent);
+  --shadow-lg: 0 20px 48px color-mix(in srgb, var(--color-text) 16%, transparent), 0 6px 16px color-mix(in srgb, var(--color-text) 8%, transparent);
+
   --background: var(--color-bg);
   --foreground: var(--color-text);
   --card: var(--color-surface);
   --card-foreground: var(--color-text);
   --popover: var(--color-surface);
   --popover-foreground: var(--color-text);
-  --primary: var(--color-accent);
-  --primary-foreground: var(--color-bg);
-  --secondary: #eae7e7;
-  --secondary-foreground: var(--color-text);
-  --muted: #eae7e7;
-  --muted-foreground: color-mix(in srgb, var(--color-text) 55%, transparent);
-  --accent: #fff2ef;
-  --accent-foreground: var(--color-accent-700);
-  --destructive: var(--color-accent-700);
-  --destructive-foreground: var(--color-bg);
-  --success: #605d5d;
-  --success-foreground: var(--color-bg);
-  --warning: #ffc4b8;
-  --warning-foreground: #4d170e;
+  --primary: var(--color-primary);
+  --primary-foreground: #ffffff;
+  --secondary: var(--color-secondary-tint);
+  --secondary-foreground: var(--color-secondary-600);
+  --muted: #f1ece7;
+  --muted-foreground: color-mix(in srgb, var(--color-text) 52%, transparent);
+  --accent: var(--color-primary-tint);
+  --accent-foreground: var(--color-primary-700);
+  --destructive: var(--color-destructive);
+  --destructive-foreground: #ffffff;
+  --success: var(--color-success);
+  --success-foreground: #ffffff;
+  --warning: var(--color-warning);
+  --warning-foreground: var(--color-warning-ink);
+  --link: var(--color-secondary);
   --border: var(--color-divider);
-  --input: var(--color-divider);
-  --ring: var(--color-accent);
-  --radius: 0;
+  --input: color-mix(in srgb, var(--color-text) 20%, transparent);
+  --ring: var(--color-primary);
+  --radius: 0.875rem;
 }
 
 @theme inline {
@@ -60,13 +82,14 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-link: var(--link);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 0.25rem);
-  --radius-md: calc(var(--radius) - 0.125rem);
+  --radius-sm: calc(var(--radius) - 0.375rem);
+  --radius-md: calc(var(--radius) - 0.25rem);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 0.25rem);
+  --radius-xl: calc(var(--radius) + 0.375rem);
 }
 
 @layer base {
@@ -88,14 +111,14 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Archivo', system-ui, sans-serif;
     font-weight: 800;
-    line-height: 1.12;
+    line-height: 1.15;
     letter-spacing: -0.015em;
     text-wrap: balance;
     margin: 0 0 8px;
   }
 
   a {
-    color: var(--color-accent);
+    color: var(--link);
     text-underline-offset: 3px;
   }
 
@@ -104,12 +127,12 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
 
   ::selection {
-    background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+    background: color-mix(in srgb, var(--color-primary) 25%, transparent);
   }
 
   #root {
@@ -123,7 +146,6 @@
   .elev-sm { box-shadow: var(--shadow-sm); }
   .elev-md { box-shadow: var(--shadow-md); }
   .elev-lg { box-shadow: var(--shadow-lg); }
-  .rounded-xl, .rounded-lg, .rounded-md, .rounded-sm { border-radius: 0 !important; }
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }

@@ -1,4 +1,8 @@
+import { format } from 'date-fns'
+import { toZonedTime } from 'date-fns-tz'
 import * as SunCalc from 'suncalc'
+
+import { TRIP_TIMEZONE } from '@/lib/dates'
 
 export interface DaylightWindow {
   sunrise: Date
@@ -53,6 +57,12 @@ export function getDaylightWarning(window: DaylightWindow, planStart?: Date | nu
   return null
 }
 
+/**
+ * Sunrise/sunset are computed as real UTC instants, but they must always be
+ * shown in Iceland's own clock time — not the traveler's browser/device
+ * timezone (e.g. IST) — since that's the time that matters for planning
+ * daylight around driving and activities while actually in Iceland.
+ */
 export function formatTime(date: Date): string {
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  return format(toZonedTime(date, TRIP_TIMEZONE), 'HH:mm')
 }

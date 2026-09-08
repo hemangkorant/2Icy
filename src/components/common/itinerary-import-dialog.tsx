@@ -1,4 +1,4 @@
-import { FileUp } from 'lucide-react'
+import { IconFileUpload } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,7 @@ export function ItineraryImportButton({ onImport }: { onImport: (days: ImportedI
   return (
     <>
       <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        <FileUp className="size-4" /> Import PDF
+        <IconFileUpload className="size-4" /> Import PDF
       </Button>
       <ItineraryImportDialog open={open} onOpenChange={setOpen} onImport={onImport} />
     </>

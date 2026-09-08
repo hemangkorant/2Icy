@@ -1,11 +1,36 @@
-import { encryptBytes, encryptJson, generateOpaqueId } from '@/lib/crypto'
+import { decryptBytes, decryptJson, encryptBytes, encryptJson, generateOpaqueId } from '@/lib/crypto'
 import { supabase } from '@/lib/supabase'
-import type { DocumentCategory, DocumentLinkedEntity } from '@/types/database'
+import type { DocumentCategory, DocumentLinkedEntity, Tables } from '@/types/database'
 
 export interface DocumentMetadata {
   title: string
   originalFileName: string
   mimeType: string
+}
+
+export async function decryptDocumentTitle(
+  vaultKey: CryptoKey,
+  doc: Pick<Tables<'documents'>, 'encrypted_metadata' | 'metadata_iv'>,
+): Promise<string> {
+  const meta = await decryptJson<DocumentMetadata>(vaultKey, doc.encrypted_metadata, doc.metadata_iv)
+  return meta.title
+}
+
+/** Decrypts a stored document and triggers a browser download of the original file. */
+export async function downloadEncryptedDocument(vaultKey: CryptoKey, doc: Tables<'documents'>) {
+  const meta = await decryptJson<DocumentMetadata>(vaultKey, doc.encrypted_metadata, doc.metadata_iv)
+  const { data, error } = await supabase.storage.from('trip-documents').download(doc.storage_path)
+  if (error || !data) throw new Error(error?.message ?? 'Download failed')
+  const cipherBuffer = await data.arrayBuffer()
+  const cipherBase64 = btoa(String.fromCharCode(...new Uint8Array(cipherBuffer)))
+  const plainBuffer = await decryptBytes(vaultKey, cipherBase64, doc.file_iv)
+  const blob = new Blob([plainBuffer], { type: meta.mimeType || 'application/octet-stream' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = meta.originalFileName || 'document'
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 /**

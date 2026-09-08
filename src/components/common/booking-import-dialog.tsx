@@ -1,4 +1,4 @@
-import { FileUp } from 'lucide-react'
+import { IconFileUpload } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -14,7 +14,7 @@ export function BookingImportButton({ kind, onImport }: { kind: ImportedBookingK
   return (
     <>
       <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        <FileUp className="size-4" /> Import PDF
+        <IconFileUpload className="size-4" /> Import PDF
       </Button>
       <BookingImportDialog kind={kind} open={open} onOpenChange={setOpen} onImport={onImport} />
     </>

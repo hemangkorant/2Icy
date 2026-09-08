@@ -13,15 +13,7 @@ export type ChecklistStage = 'before_pickup' | 'during_trip' | 'before_return'
 export type ActivityReminderStatus = 'pending' | 'confirmed' | 'checked_in'
 export type SafetyCheckType = 'weather' | 'road' | 'safetravel' | 'aurora' | 'alert'
 export type SafetySeverity = 'low' | 'medium' | 'high'
-export type ExpenseCategory =
-  | 'food'
-  | 'activities'
-  | 'fuel'
-  | 'accommodation'
-  | 'transport'
-  | 'souvenirs'
-  | 'groceries'
-  | 'other'
+export type ExpenseCategory = 'food' | 'activities' | 'fuel' | 'accommodation' | 'transport' | 'souvenirs' | 'groceries' | 'other'
 export type CurrencyCode = 'ISK' | 'INR' | 'EUR' | 'GBP' | 'USD'
 export type SplitMethod = 'equal' | 'custom' | 'none'
 export type DocumentCategory =
@@ -57,14 +49,10 @@ export type TaskGroup =
   | 'offline_maps_emergency'
   | 'other'
 export type ReminderPreference = 'none' | '1_day' | '3_days' | '1_week'
-export type EmergencyCategory =
-  | 'emergency_services'
-  | 'health'
-  | 'embassy'
-  | 'insurance'
-  | 'roadside_assistance'
-  | 'family'
-  | 'other'
+export type EmergencyCategory = 'emergency_services' | 'health' | 'embassy' | 'insurance' | 'roadside_assistance' | 'family' | 'other'
+export type Gender = 'female' | 'male' | 'other' | 'prefer_not_to_say'
+export type BathroomType = 'private' | 'shared'
+export type CookingFacility = 'kitchen' | 'shared_kitchen' | 'pantry' | 'none'
 
 interface AuditedInsert {
   created_at?: string
@@ -86,10 +74,21 @@ type ProfilesRow = {
   email: string
   full_name: string | null
   avatar_url: string | null
+  first_name: string | null
+  last_name: string | null
+  gender: Gender | null
   created_at: string
   updated_at: string
 }
-type ProfilesInsert = { id: string; email: string; full_name?: string | null; avatar_url?: string | null }
+type ProfilesInsert = {
+  id: string
+  email: string
+  full_name?: string | null
+  avatar_url?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  gender?: Gender | null
+}
 
 type TripsRow = {
   id: string
@@ -103,15 +102,17 @@ type TripsRow = {
   updated_at: string
   updated_by: string | null
 }
-type TripsInsert = Flatten<AuditedInsert & {
-  id?: string
-  name: string
-  start_date?: string | null
-  end_date?: string | null
-  timezone?: string
-  owner_id: string
-  is_demo?: boolean
-}>
+type TripsInsert = Flatten<
+  AuditedInsert & {
+    id?: string
+    name: string
+    start_date?: string | null
+    end_date?: string | null
+    timezone?: string
+    owner_id: string
+    is_demo?: boolean
+  }
+>
 
 type TripMembersRow = {
   id: string
@@ -148,19 +149,21 @@ type DocumentsRow = {
   updated_at: string
   updated_by: string | null
 }
-type DocumentsInsert = Flatten<AuditedInsert & {
-  id?: string
-  trip_id: string
-  category: DocumentCategory
-  linked_entity_type?: DocumentLinkedEntity
-  linked_entity_id?: string | null
-  storage_path: string
-  encrypted_metadata: string
-  metadata_iv: string
-  file_iv: string
-  size_bytes?: number
-  owner_id: string
-}>
+type DocumentsInsert = Flatten<
+  AuditedInsert & {
+    id?: string
+    trip_id: string
+    category: DocumentCategory
+    linked_entity_type?: DocumentLinkedEntity
+    linked_entity_id?: string | null
+    storage_path: string
+    encrypted_metadata: string
+    metadata_iv: string
+    file_iv: string
+    size_bytes?: number
+    owner_id: string
+  }
+>
 
 type ItineraryDaysRow = {
   id: string
@@ -176,17 +179,19 @@ type ItineraryDaysRow = {
   updated_at: string
   updated_by: string | null
 }
-type ItineraryDaysInsert = Flatten<AuditedInsert & {
-  id?: string
-  trip_id: string
-  date: string
-  sort_order?: number
-  title?: string | null
-  overnight_location?: string | null
-  overnight_lat?: number | null
-  overnight_lng?: number | null
-  notes?: string | null
-}>
+type ItineraryDaysInsert = Flatten<
+  AuditedInsert & {
+    id?: string
+    trip_id: string
+    date: string
+    sort_order?: number
+    title?: string | null
+    overnight_location?: string | null
+    overnight_lat?: number | null
+    overnight_lng?: number | null
+    notes?: string | null
+  }
+>
 
 type ItineraryStopsRow = {
   id: string
@@ -205,20 +210,22 @@ type ItineraryStopsRow = {
   updated_at: string
   updated_by: string | null
 }
-type ItineraryStopsInsert = Flatten<AuditedInsert & {
-  id?: string
-  day_id: string
-  position?: number
-  name: string
-  address?: string | null
-  lat?: number | null
-  lng?: number | null
-  planned_arrival?: string | null
-  planned_departure?: string | null
-  activity_notes?: string | null
-  booking_link?: string | null
-  status?: StopStatus
-}>
+type ItineraryStopsInsert = Flatten<
+  AuditedInsert & {
+    id?: string
+    day_id: string
+    position?: number
+    name: string
+    address?: string | null
+    lat?: number | null
+    lng?: number | null
+    planned_arrival?: string | null
+    planned_departure?: string | null
+    activity_notes?: string | null
+    booking_link?: string | null
+    status?: StopStatus
+  }
+>
 
 type DrivingSegmentsRow = {
   id: string
@@ -233,16 +240,18 @@ type DrivingSegmentsRow = {
   updated_at: string
   updated_by: string | null
 }
-type DrivingSegmentsInsert = Flatten<AuditedInsert & {
-  id?: string
-  day_id: string
-  from_stop_id: string
-  to_stop_id: string
-  distance_km?: number | null
-  duration_minutes?: number | null
-  google_maps_url?: string | null
-  notes?: string | null
-}>
+type DrivingSegmentsInsert = Flatten<
+  AuditedInsert & {
+    id?: string
+    day_id: string
+    from_stop_id: string
+    to_stop_id: string
+    distance_km?: number | null
+    duration_minutes?: number | null
+    google_maps_url?: string | null
+    notes?: string | null
+  }
+>
 
 type AccommodationsRow = {
   id: string
@@ -264,31 +273,49 @@ type AccommodationsRow = {
   parking_notes: string | null
   cancellation_policy: string | null
   notes: string | null
+  itinerary_day_ids: string[]
+  town: string | null
+  room_type: string | null
+  bathroom_type: BathroomType | null
+  cooking_facility: CookingFacility | null
+  has_parking: boolean | null
+  breakfast_included: boolean | null
+  cancellation_deadline: string | null
   created_at: string
   updated_at: string
   updated_by: string | null
 }
-type AccommodationsInsert = Flatten<AuditedInsert & {
-  id?: string
-  trip_id: string
-  name: string
-  check_in_date?: string | null
-  check_out_date?: string | null
-  check_in_time?: string | null
-  check_out_time?: string | null
-  address?: string | null
-  lat?: number | null
-  lng?: number | null
-  confirmation_number?: string | null
-  contact_name?: string | null
-  contact_phone?: string | null
-  contact_email?: string | null
-  website?: string | null
-  booking_source?: string | null
-  parking_notes?: string | null
-  cancellation_policy?: string | null
-  notes?: string | null
-}>
+type AccommodationsInsert = Flatten<
+  AuditedInsert & {
+    id?: string
+    trip_id: string
+    name: string
+    check_in_date?: string | null
+    check_out_date?: string | null
+    check_in_time?: string | null
+    check_out_time?: string | null
+    address?: string | null
+    lat?: number | null
+    lng?: number | null
+    confirmation_number?: string | null
+    contact_name?: string | null
+    contact_phone?: string | null
+    contact_email?: string | null
+    website?: string | null
+    booking_source?: string | null
+    parking_notes?: string | null
+    cancellation_policy?: string | null
+    notes?: string | null
+    itinerary_day_ids?: string[]
+    town?: string | null
+    room_type?: string | null
+    bathroom_type?: BathroomType | null
+    cooking_facility?: CookingFacility | null
+    has_parking?: boolean | null
+    breakfast_included?: boolean | null
+    cancellation_deadline?: string | null
+  }
+>
 
 type FlightsRow = {
   id: string
@@ -310,23 +337,25 @@ type FlightsRow = {
   updated_at: string
   updated_by: string | null
 }
-type FlightsInsert = Flatten<AuditedInsert & {
-  id?: string
-  trip_id: string
-  airline?: string | null
-  flight_number?: string | null
-  departure_airport?: string | null
-  arrival_airport?: string | null
-  departure_at?: string | null
-  arrival_at?: string | null
-  booking_reference?: string | null
-  seats?: string | null
-  baggage_allowance?: string | null
-  terminal?: string | null
-  gate?: string | null
-  status?: 'scheduled' | 'delayed' | 'cancelled' | 'completed'
-  notes?: string | null
-}>
+type FlightsInsert = Flatten<
+  AuditedInsert & {
+    id?: string
+    trip_id: string
+    airline?: string | null
+    flight_number?: string | null
+    departure_airport?: string | null
+    arrival_airport?: string | null
+    departure_at?: string | null
+    arrival_at?: string | null
+    booking_reference?: string | null
+    seats?: string | null
+    baggage_allowance?: string | null
+    terminal?: string | null
+    gate?: string | null
+    status?: 'scheduled' | 'delayed' | 'cancelled' | 'completed'
+    notes?: string | null
+  }
+>
 
 type RentalCarsRow = {
   id: string
@@ -353,28 +382,30 @@ type RentalCarsRow = {
   updated_at: string
   updated_by: string | null
 }
-type RentalCarsInsert = Flatten<AuditedInsert & {
-  id?: string
-  trip_id: string
-  rental_company?: string | null
-  car_model?: string | null
-  registration_number?: string | null
-  pickup_location?: string | null
-  pickup_address?: string | null
-  pickup_at?: string | null
-  dropoff_location?: string | null
-  dropoff_address?: string | null
-  dropoff_at?: string | null
-  confirmation_number?: string | null
-  fuel_type?: FuelType
-  insurance_level?: string | null
-  insurance_exclusions?: string | null
-  emergency_contact?: string | null
-  mileage_pickup?: number | null
-  mileage_return?: number | null
-  return_instructions?: string | null
-  notes?: string | null
-}>
+type RentalCarsInsert = Flatten<
+  AuditedInsert & {
+    id?: string
+    trip_id: string
+    rental_company?: string | null
+    car_model?: string | null
+    registration_number?: string | null
+    pickup_location?: string | null
+    pickup_address?: string | null
+    pickup_at?: string | null
+    dropoff_location?: string | null
+    dropoff_address?: string | null
+    dropoff_at?: string | null
+    confirmation_number?: string | null
+    fuel_type?: FuelType
+    insurance_level?: string | null
+    insurance_exclusions?: string | null
+    emergency_contact?: string | null
+    mileage_pickup?: number | null
+    mileage_return?: number | null
+    return_instructions?: string | null
+    notes?: string | null
+  }
+>
 
 type VehicleChecklistsRow = {
   id: string
@@ -389,16 +420,18 @@ type VehicleChecklistsRow = {
   updated_at: string
   updated_by: string | null
 }
-type VehicleChecklistsInsert = Flatten<AuditedInsert & {
-  id?: string
-  rental_car_id: string
-  stage: ChecklistStage
-  label: string
-  is_checked?: boolean
-  notes?: string | null
-  photo_document_id?: string | null
-  position?: number
-}>
+type VehicleChecklistsInsert = Flatten<
+  AuditedInsert & {
+    id?: string
+    rental_car_id: string
+    stage: ChecklistStage
+    label: string
+    is_checked?: boolean
+    notes?: string | null
+    photo_document_id?: string | null
+    position?: number
+  }
+>
 
 type FuelEntriesRow = {
   id: string
@@ -418,21 +451,23 @@ type FuelEntriesRow = {
   updated_at: string
   updated_by: string | null
 }
-type FuelEntriesInsert = Flatten<AuditedInsert & {
-  id?: string
-  trip_id: string
-  rental_car_id?: string | null
-  station_name?: string | null
-  lat?: number | null
-  lng?: number | null
-  filled_at?: string
-  price_per_liter?: number | null
-  amount_paid?: number | null
-  liters?: number | null
-  odometer?: number | null
-  receipt_document_id?: string | null
-  notes?: string | null
-}>
+type FuelEntriesInsert = Flatten<
+  AuditedInsert & {
+    id?: string
+    trip_id: string
+    rental_car_id?: string | null
+    station_name?: string | null
+    lat?: number | null
+    lng?: number | null
+    filled_at?: string
+    price_per_liter?: number | null
+    amount_paid?: number | null
+    liters?: number | null
+    odometer?: number | null
+    receipt_document_id?: string | null
+    notes?: string | null
+  }
+>
 
 type SuggestedFuelStopsRow = {
   id: string
@@ -445,14 +480,16 @@ type SuggestedFuelStopsRow = {
   updated_at: string
   updated_by: string | null
 }
-type SuggestedFuelStopsInsert = Flatten<AuditedInsert & {
-  id?: string
-  day_id: string
-  name: string
-  lat?: number | null
-  lng?: number | null
-  notes?: string | null
-}>
+type SuggestedFuelStopsInsert = Flatten<
+  AuditedInsert & {
+    id?: string
+    day_id: string
+    name: string
+    lat?: number | null
+    lng?: number | null
+    notes?: string | null
+  }
+>
 
 type ActivitiesRow = {
   id: string
@@ -481,30 +518,32 @@ type ActivitiesRow = {
   updated_at: string
   updated_by: string | null
 }
-type ActivitiesInsert = Flatten<AuditedInsert & {
-  id?: string
-  trip_id: string
-  day_id?: string | null
-  name: string
-  provider?: string | null
-  activity_date?: string | null
-  start_time?: string | null
-  end_time?: string | null
-  duration_minutes?: number | null
-  meeting_point?: string | null
-  lat?: number | null
-  lng?: number | null
-  booking_reference?: string | null
-  price?: number | null
-  currency?: string
-  participants?: string | null
-  what_to_bring?: string | null
-  cancellation_policy?: string | null
-  contact_details?: string | null
-  booking_link?: string | null
-  reminder_status?: ActivityReminderStatus
-  notes?: string | null
-}>
+type ActivitiesInsert = Flatten<
+  AuditedInsert & {
+    id?: string
+    trip_id: string
+    day_id?: string | null
+    name: string
+    provider?: string | null
+    activity_date?: string | null
+    start_time?: string | null
+    end_time?: string | null
+    duration_minutes?: number | null
+    meeting_point?: string | null
+    lat?: number | null
+    lng?: number | null
+    booking_reference?: string | null
+    price?: number | null
+    currency?: string
+    participants?: string | null
+    what_to_bring?: string | null
+    cancellation_policy?: string | null
+    contact_details?: string | null
+    booking_link?: string | null
+    reminder_status?: ActivityReminderStatus
+    notes?: string | null
+  }
+>
 
 type SafetyChecksRow = {
   id: string
@@ -520,17 +559,19 @@ type SafetyChecksRow = {
   updated_at: string
   updated_by: string | null
 }
-type SafetyChecksInsert = Flatten<AuditedInsert & {
-  id?: string
-  trip_id: string
-  day_id?: string | null
-  check_type: SafetyCheckType
-  checked_at?: string
-  checked_by?: string | null
-  source_url?: string | null
-  assessment?: string | null
-  severity?: SafetySeverity
-}>
+type SafetyChecksInsert = Flatten<
+  AuditedInsert & {
+    id?: string
+    trip_id: string
+    day_id?: string | null
+    check_type: SafetyCheckType
+    checked_at?: string
+    checked_by?: string | null
+    source_url?: string | null
+    assessment?: string | null
+    severity?: SafetySeverity
+  }
+>
 
 type ExpensesRow = {
   id: string
@@ -551,22 +592,24 @@ type ExpensesRow = {
   updated_at: string
   updated_by: string | null
 }
-type ExpensesInsert = Flatten<AuditedInsert & {
-  id?: string
-  trip_id: string
-  day_id?: string | null
-  category: ExpenseCategory
-  expense_date?: string
-  amount: number
-  currency?: CurrencyCode
-  converted_amount?: number | null
-  converted_currency?: CurrencyCode | null
-  exchange_rate?: number | null
-  payer_id?: string | null
-  split_method?: SplitMethod
-  receipt_document_id?: string | null
-  notes?: string | null
-}>
+type ExpensesInsert = Flatten<
+  AuditedInsert & {
+    id?: string
+    trip_id: string
+    day_id?: string | null
+    category: ExpenseCategory
+    expense_date?: string
+    amount: number
+    currency?: CurrencyCode
+    converted_amount?: number | null
+    converted_currency?: CurrencyCode | null
+    exchange_rate?: number | null
+    payer_id?: string | null
+    split_method?: SplitMethod
+    receipt_document_id?: string | null
+    notes?: string | null
+  }
+>
 
 type ExpenseSplitsRow = {
   id: string
@@ -599,18 +642,20 @@ type PackingItemsRow = {
   updated_at: string
   updated_by: string | null
 }
-type PackingItemsInsert = Flatten<AuditedInsert & {
-  id?: string
-  trip_id: string
-  group_name: PackingGroup
-  name: string
-  quantity?: number
-  owner_id?: string | null
-  packed?: boolean
-  priority?: PackingPriority
-  notes?: string | null
-  buy_before_trip?: boolean
-}>
+type PackingItemsInsert = Flatten<
+  AuditedInsert & {
+    id?: string
+    trip_id: string
+    group_name: PackingGroup
+    name: string
+    quantity?: number
+    owner_id?: string | null
+    packed?: boolean
+    priority?: PackingPriority
+    notes?: string | null
+    buy_before_trip?: boolean
+  }
+>
 
 type TasksRow = {
   id: string
@@ -626,17 +671,19 @@ type TasksRow = {
   updated_at: string
   updated_by: string | null
 }
-type TasksInsert = Flatten<AuditedInsert & {
-  id?: string
-  trip_id: string
-  group_name: TaskGroup
-  title: string
-  due_date?: string | null
-  assignee_id?: string | null
-  completed?: boolean
-  reminder_preference?: ReminderPreference
-  notes?: string | null
-}>
+type TasksInsert = Flatten<
+  AuditedInsert & {
+    id?: string
+    trip_id: string
+    group_name: TaskGroup
+    title: string
+    due_date?: string | null
+    assignee_id?: string | null
+    completed?: boolean
+    reminder_preference?: ReminderPreference
+    notes?: string | null
+  }
+>
 
 type EmergencyContactsRow = {
   id: string
@@ -654,19 +701,21 @@ type EmergencyContactsRow = {
   updated_at: string
   updated_by: string | null
 }
-type EmergencyContactsInsert = Flatten<AuditedInsert & {
-  id?: string
-  trip_id: string
-  category: EmergencyCategory
-  country?: string | null
-  name: string
-  phone?: string | null
-  whatsapp_phone?: string | null
-  email?: string | null
-  address?: string | null
-  notes?: string | null
-  needs_verification?: boolean
-}>
+type EmergencyContactsInsert = Flatten<
+  AuditedInsert & {
+    id?: string
+    trip_id: string
+    category: EmergencyCategory
+    country?: string | null
+    name: string
+    phone?: string | null
+    whatsapp_phone?: string | null
+    email?: string | null
+    address?: string | null
+    notes?: string | null
+    needs_verification?: boolean
+  }
+>
 
 type AppSettingsRow = {
   id: string
@@ -681,16 +730,18 @@ type AppSettingsRow = {
   updated_at: string
   updated_by: string | null
 }
-type AppSettingsInsert = Flatten<AuditedInsert & {
-  id?: string
-  trip_id: string
-  vault_salt?: string | null
-  vault_check_ciphertext?: string | null
-  vault_check_iv?: string | null
-  exchange_rates?: Json
-  exchange_rates_updated_at?: string | null
-  default_currency?: CurrencyCode
-}>
+type AppSettingsInsert = Flatten<
+  AuditedInsert & {
+    id?: string
+    trip_id: string
+    vault_salt?: string | null
+    vault_check_ciphertext?: string | null
+    vault_check_iv?: string | null
+    exchange_rates?: Json
+    exchange_rates_updated_at?: string | null
+    default_currency?: CurrencyCode
+  }
+>
 
 // Every table entry below is a fully inline object literal (Row/Insert/Update/
 // Relationships), matching exactly what `supabase gen types` itself emits.
@@ -701,15 +752,30 @@ type AppSettingsInsert = Flatten<AuditedInsert & {
 export type Database = {
   public: {
     Tables: {
-      profiles: { Row: ProfilesRow; Insert: ProfilesInsert; Update: Partial<ProfilesInsert>; Relationships: [] }
-      trips: { Row: TripsRow; Insert: TripsInsert; Update: Partial<TripsInsert>; Relationships: [] }
+      profiles: {
+        Row: ProfilesRow
+        Insert: ProfilesInsert
+        Update: Partial<ProfilesInsert>
+        Relationships: []
+      }
+      trips: {
+        Row: TripsRow
+        Insert: TripsInsert
+        Update: Partial<TripsInsert>
+        Relationships: []
+      }
       trip_members: {
         Row: TripMembersRow
         Insert: TripMembersInsert
         Update: Partial<TripMembersInsert>
         Relationships: []
       }
-      documents: { Row: DocumentsRow; Insert: DocumentsInsert; Update: Partial<DocumentsInsert>; Relationships: [] }
+      documents: {
+        Row: DocumentsRow
+        Insert: DocumentsInsert
+        Update: Partial<DocumentsInsert>
+        Relationships: []
+      }
       itinerary_days: {
         Row: ItineraryDaysRow
         Insert: ItineraryDaysInsert
@@ -734,7 +800,12 @@ export type Database = {
         Update: Partial<AccommodationsInsert>
         Relationships: []
       }
-      flights: { Row: FlightsRow; Insert: FlightsInsert; Update: Partial<FlightsInsert>; Relationships: [] }
+      flights: {
+        Row: FlightsRow
+        Insert: FlightsInsert
+        Update: Partial<FlightsInsert>
+        Relationships: []
+      }
       rental_cars: {
         Row: RentalCarsRow
         Insert: RentalCarsInsert
@@ -759,14 +830,24 @@ export type Database = {
         Update: Partial<SuggestedFuelStopsInsert>
         Relationships: []
       }
-      activities: { Row: ActivitiesRow; Insert: ActivitiesInsert; Update: Partial<ActivitiesInsert>; Relationships: [] }
+      activities: {
+        Row: ActivitiesRow
+        Insert: ActivitiesInsert
+        Update: Partial<ActivitiesInsert>
+        Relationships: []
+      }
       safety_checks: {
         Row: SafetyChecksRow
         Insert: SafetyChecksInsert
         Update: Partial<SafetyChecksInsert>
         Relationships: []
       }
-      expenses: { Row: ExpensesRow; Insert: ExpensesInsert; Update: Partial<ExpensesInsert>; Relationships: [] }
+      expenses: {
+        Row: ExpensesRow
+        Insert: ExpensesInsert
+        Update: Partial<ExpensesInsert>
+        Relationships: []
+      }
       expense_splits: {
         Row: ExpenseSplitsRow
         Insert: ExpenseSplitsInsert
@@ -779,7 +860,12 @@ export type Database = {
         Update: Partial<PackingItemsInsert>
         Relationships: []
       }
-      tasks: { Row: TasksRow; Insert: TasksInsert; Update: Partial<TasksInsert>; Relationships: [] }
+      tasks: {
+        Row: TasksRow
+        Insert: TasksInsert
+        Update: Partial<TasksInsert>
+        Relationships: []
+      }
       emergency_contacts: {
         Row: EmergencyContactsRow
         Insert: EmergencyContactsInsert

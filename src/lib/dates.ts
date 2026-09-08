@@ -23,10 +23,27 @@ export function formatFriendlyDate(iso: string | null | undefined): string {
 export function formatFriendlyDateTime(iso: string | null | undefined): string {
   if (!iso) return '—'
   try {
-    return format(new Date(iso), "EEE d MMM, HH:mm")
+    return format(new Date(iso), 'EEE d MMM, HH:mm')
   } catch {
     return iso
   }
+}
+
+/**
+ * Cancellation deadlines are entered via a plain `datetime-local` input with
+ * no timezone attached, on the assumption the traveler is thinking in IST.
+ * This must NOT reinterpret the stored value as a real UTC instant and
+ * convert it (that shifts the wall-clock numbers by Postgres's UTC offset,
+ * showing e.g. 05:29 next day for a 23:59 entry) — it just echoes back
+ * exactly the digits that were typed.
+ */
+export function formatIstDateTime(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  const match = iso.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
+  if (!match) return iso
+  const [, year, month, day, hour, minute] = match
+  const date = new Date(Number(year), Number(month) - 1, Number(day))
+  return `${format(date, 'EEE d MMM')}, ${hour}:${minute} IST`
 }
 
 export function relativeToNow(iso: string | null | undefined): string {

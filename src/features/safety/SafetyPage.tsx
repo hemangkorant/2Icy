@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, ExternalLink, Plus, ShieldAlert, Trash2 } from 'lucide-react'
+import { IconAlertTriangle, IconCircleCheck, IconExternalLink, IconPlus, IconShieldExclamation, IconTrash } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
 
 import { PageHeader } from '@/components/common/page-header'
@@ -21,7 +21,7 @@ const NO_DAY = '__general__'
 export function SafetyPage() {
   const { activeTripId } = useTrip()
   const { user } = useAuth()
-  const days = useRealtimeTable('itinerary_days', 'trip_id', activeTripId, { orderBy: 'sort_order' })
+  const days = useRealtimeTable('itinerary_days', 'trip_id', activeTripId, { orderBy: 'date' })
   const checks = useRealtimeTable('safety_checks', 'trip_id', activeTripId, { orderBy: 'checked_at', ascending: false })
   const [selectedDay, setSelectedDay] = useState<string>(NO_DAY)
   const [severity, setSeverity] = useState<SafetySeverity>('medium')
@@ -61,8 +61,8 @@ export function SafetyPage() {
       <PageHeader title="Safety & Weather" description="Official sources, plus your own reviewed-at-a-glance log." />
 
       <div className="rounded-lg border border-border bg-muted p-3 text-xs text-muted-foreground">
-        <span className="font-medium text-foreground">This app is not an official safety service.</span> Always defer to
-        official Icelandic sources (Vedur, road.is, SafeTravel) and local emergency guidance (112) over anything logged here.
+        <span className="font-medium text-foreground">This app is not an official safety service.</span> Always defer to official Icelandic
+        sources (Vedur, road.is, SafeTravel) and local emergency guidance (112) over anything logged here.
       </div>
 
       {activeAlerts.length > 0 && (
@@ -76,14 +76,14 @@ export function SafetyPage() {
                   : 'flex items-start gap-2 rounded-lg border border-warning bg-warning/10 p-3 text-sm text-warning-foreground'
               }
             >
-              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+              <IconAlertTriangle className="mt-0.5 size-4 shrink-0" />
               <div className="flex-1">
                 <p className="font-medium capitalize">{alert.severity} priority alert</p>
                 <p>{alert.assessment}</p>
                 <p className="text-xs opacity-70">{relativeToNow(alert.checked_at)}</p>
               </div>
               <Button variant="ghost" size="icon" onClick={() => checks.remove(alert.id)} aria-label="Clear alert">
-                <Trash2 className="size-4" />
+                <IconTrash className="size-4" />
               </Button>
             </div>
           ))}
@@ -125,7 +125,7 @@ export function SafetyPage() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-sm">
-            <ShieldAlert className="size-4" /> Log a volcanic / weather alert
+            <IconShieldExclamation className="size-4" /> Log a volcanic / weather alert
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -151,7 +151,7 @@ export function SafetyPage() {
                 setAlertText('')
               }}
             >
-              <Plus className="size-4" /> Log alert
+              <IconPlus className="size-4" /> Log alert
             </Button>
           </div>
         </CardContent>
@@ -171,11 +171,17 @@ function SafetySourceCard({
 }) {
   const source = SAFETY_SOURCES[type]
   const [assessment, setAssessment] = useState('')
+  const SourceIcon = source.icon
 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">{source.label}</CardTitle>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-secondary-tint)] text-[var(--color-secondary)]">
+            <SourceIcon className="size-4" />
+          </span>
+          {source.label}
+        </CardTitle>
         <p className="text-xs text-muted-foreground">{source.description}</p>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -185,11 +191,11 @@ function SafetySourceCard({
           rel="noreferrer"
           className="flex w-fit items-center gap-1 rounded-md bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground hover:opacity-80"
         >
-          <ExternalLink className="size-3" /> Open {source.label}
+          <IconExternalLink className="size-3" /> Open {source.label}
         </a>
         {latest ? (
           <p className="flex items-center gap-1.5 text-xs text-success">
-            <CheckCircle2 className="size-3.5" /> Last checked {relativeToNow(latest.checked_at)}
+            <IconCircleCheck className="size-3.5" /> Last checked {relativeToNow(latest.checked_at)}
             {latest.assessment && `: “${latest.assessment}”`}
           </p>
         ) : (
